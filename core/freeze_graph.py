@@ -42,11 +42,17 @@ class parser(argparse.ArgumentParser):
             help="[default: %(default)s] The location of a labels_file ",
             metavar="<LF>",
         )
+        
+        self.add_argument(
+            "--gpu_output_node_names", "-gn", default=["concat_1", "concat_2", "concat_3"],
+            help="[default: %(default)s] The output node names, list",
+            metavar="<GN>",
+        )
 
         self.add_argument(
-            "--output_node_names", "-on", default=["concat_1", "concat_2", "concat_3"],
+            "--cpu_output_node_names", "-gn", default=["concat", "mul"],
             help="[default: %(default)s] The output node names, list",
-            metavar="<ON>",
+            metavar="<CN>",
         )
 
         self.add_argument(
@@ -95,9 +101,8 @@ def main(argv):
         saver.restore(sess, flags.ckpt_file)
         print('=> checkpoint file restored.')
 
-        utils.freeze_graph(sess, flags.gpu_nms_pb, ["concat_1", "concat_2", "concat_3"])
-        utils.freeze_graph(sess, flags.cpu_nms_pb, ["concat", "mul"])
-
+        utils.freeze_graph(sess, flags.gpu_nms_pb, flags.gpu_output_node_names)
+        utils.freeze_graph(sess, flags.cpu_nms_pb, flags.cpu_output_node_names)
 if __name__ == "__main__": main(sys.argv)
 
 
