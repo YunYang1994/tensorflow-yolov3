@@ -50,7 +50,7 @@ class parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "--cpu_output_node_names", "-gn", default=["concat", "mul"],
+            "--cpu_output_node_names", "-cn", default=["concat", "mul"],
             help="[default: %(default)s] The output node names, list",
             metavar="<CN>",
         )
