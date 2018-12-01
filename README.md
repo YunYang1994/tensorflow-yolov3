@@ -2,7 +2,7 @@
 
 Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This repository  is inspired by [Paweł Kapica](https://github.com/mystic123) and [Kiril Cvetkov
 ](https://github.com/kirilcvetkov92). The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
-- [x] YOLO v3 architecture
+- [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
 - [x] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
 - [x] Basic working demo
 - [x] Non max suppression on the both `GPU` and `CPU` is supported
