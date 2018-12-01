@@ -59,9 +59,9 @@ score_thresh=0.4
 mask = tf.greater_equal(scores, tf.constant(score_thresh))
 ```
 
-### 4.4 Do non-max suppression
+### 4.4 Do non-maximum suppression
 
-Even after yolo filtering by thresholding over, we still have a lot of overlapping boxes. Second approach and filtering is Non-Max suppression algorithm.
+Even after yolo filtering by thresholding over, we still have a lot of overlapping boxes. Second approach and filtering is Non-Maximum suppression algorithm.
 
 * Discard all boxes with `Pc <= 0.4`  
 * While tehre are any remaining boxes : 
@@ -69,12 +69,13 @@ Even after yolo filtering by thresholding over, we still have a lot of overlappi
     * Output that as a prediction
     * Discard any remaining boxes with `IOU>=0.5` with the box output in the previous step
 
+In tensorflow, we can simply implement non maximum suppression algorithm like this. more details see [here](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/utils.py)
 ```
 for i in range(num_classes):
     tf.image.non_max_suppression(boxes, score[:,i], iou_threshold=0.5) 
  ```
  
-Non-max suppression uses the very important function called **"Intersection over Union"**, or IoU. Here is an exmaple of non max suppression algorithm: on input the aglorithm receive 4 overlapping bounding boxes, and the output returns only one
+Non-max suppression uses the very important function called **"Intersection over Union"**, or IoU. Here is an exmaple of non maximum suppression algorithm: on input the aglorithm receive 4 overlapping bounding boxes, and the output returns only one
 
 ![image](./docs/images/iou.png)
 
