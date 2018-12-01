@@ -20,7 +20,7 @@ from core import utils
 
 
 SIZE = [416, 416]
-video_path = "./data/demo_data/project_video.mp4"
+video_path = "./data/demo_data/road.mp4"
 classes = utils.get_classes('./data/coco.names')
 num_classes = len(classes)
 input_tensor, output_tensors = utils.read_pb_return_tensors(tf.get_default_graph(),
