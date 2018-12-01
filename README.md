@@ -11,11 +11,11 @@ Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This reposito
 ## quick start
 1. Clone this file
 ```bashrc
-$ git clone https://github.com/YunYang1994/tf-yolov3.git
+$ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
 ```
 2.  You are supposed  to install some dependencies before getting out hands with these codes.
 ```bashrc
-$ cd tf-yolov3
+$ cd tensorflow-yolov3
 $ pip install -r ./docs/requirements.txt
 ```
 3. Exporting loaded COCO weights as TF checkpoint and frozen graph
