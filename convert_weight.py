@@ -80,10 +80,6 @@ def main(argv):
         inputs = tf.placeholder(tf.float32, [1, SIZE, SIZE, 3]) # placeholder for detector inputs
         with tf.variable_scope('yolov3'):
             detections = model.forward(inputs)
-            load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), flags.weights_path)
-
-        var_list = tf.global_variables(scope='yolov3')
-        saver = tf.train.Saver(var_list=var_list)
 
         boxes, scores = utils.get_boxes_scores(detections)
         print("=>", boxes, scores)
@@ -92,12 +88,14 @@ def main(argv):
         print("=>", boxes, scores, labels)
         feature_map_1, feature_map_2, feature_map_3 = model.feature_maps
         print("=>", feature_map_1, feature_map_2, feature_map_3)
+        saver = tf.train.Saver(var_list=tf.global_variables(scope='yolov3'))
 
         if flags.convert:
             if not os.path.exists(flags.weights_path):
                 print('=> downloading yolov3 weights ... ')
                 wget.download('https://pjreddie.com/media/files/yolov3.weights', flags.weights_path)
 
+            load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), flags.weights_path)
             sess.run(load_ops)
             save_path = saver.save(sess, save_path=flags.ckpt_file)
             print('=> model saved in path: {}'.format(save_path))
