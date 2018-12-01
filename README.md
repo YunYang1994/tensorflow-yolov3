@@ -26,7 +26,7 @@ $ python convert_weight.py --convert --freeze
 ```bashrc
 $ python nms_demo.py
 ```
-<img src="./docs/images/611_result.jpg" width=512 height=128 />
+<img src="./docs/images/611_result.jpg" width=1080 height=616 />
 ![image](./docs/images/611_result.jpg)
 ## Yolov3
 
