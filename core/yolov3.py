@@ -23,6 +23,9 @@ class darknet53(object):
         self.outputs = self.forward(inputs)
 
     def _darknet53_block(self, inputs, filters):
+        """
+        implement residuals block in darknet53
+        """
         shortcut = inputs
         inputs = common._conv2d_fixed_padding(inputs, filters * 1, 1)
         inputs = common._conv2d_fixed_padding(inputs, filters * 2, 3)
@@ -71,7 +74,7 @@ class yolov3(object):
         self._BATCH_NORM_DECAY = batch_norm_decay
         self._LEAKY_RELU = leaky_relu
         self._NUM_CLASSES = num_classes
-        self.feature_maps = []
+        self.feature_maps = [] # [[None, 13, 13, 255], [None, 26, 26, 255], [None, 52, 52, 255]]
 
     def _yolo_block(self, inputs, filters):
         inputs = common._conv2d_fixed_padding(inputs, filters * 1, 1)

@@ -28,3 +28,57 @@ $ python nms_demo.py
 ```
 ![image](./docs/images/611_result.jpg)
 ## train for your own dataset
+
+continue ...
+
+## How does yolov3 works
+YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Before we get out hands dirty with code, we must understand how YOLO works.
+### Architercutre details
+In this project, I use pretrained weights, where we have 80 trained yolo classes, for recognition. The class label is represented as  `c`  and it's integer from 1 to 80, each number represent the class label accordingly. If  `c=3` , then the classified object is a  `car`.  The image features learned by the `Darknet-53` convolutional layers are passed onto a classifier/regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).Thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!
+![image](./docs/images/levio.jpeg)
+
+### Neural network io:
+-  **input** : [None, 416, 416, 3]
+-  **output** : confidece of an object being present in the rectangle, list of rectangles position and sizes and classes of the objects begin detected. Each bounding box is represented by 6 numbers `(Rx, Ry, Rh, Rw, Pc, C1..Cn)` as explained above. In this case n=80, which means we have `c` as 80-dimensional vector, and the final size of representing the bounding box is 85.  why is 85? see also in the below picture
+![image](./docs/images/probability_extraction.png)
+As you can see in the above picture, The first number `Pc` is the confidence of an project, The second four number `bx, by, bh, bw` represents the information of bounding boxes. The last 80 number each is the output probability of corresponding-index class.
+
+### Filtering with score threshold
+
+The output result may contain several rectangles that are false positives or overlap,  if your input image size of `[416, 416, 3]`, you will get `(52X52+26X26+13X13)x3=10647` boxes since YOLO v3 totally uses 9 anchor boxes. (Three for each scale). So It is time to find a way to reduce them. The first attempt to reduce these rectangles is to filter them by score threshold.
+
+**Input arguments**: 
+
+- `boxes`: tensor of shape [10647, 4)] 
+- `scores`: tensor of shape `[10647, 80]` containing the detection scores for 80 classes. 
+- `score_thresh`: float value , then get rid of whose boxes with low score
+
+```
+# Step 1: Create a filtering mask based on "box_class_scores" by using "threshold".
+mask = tf.greater_equal(scores, tf.constant(score_thresh))
+```
+
+### Do non-max suppression
+
+Even after yolo filtering by thresholding over, we still have a lot of overlapping boxes. Second approach and filtering is Non-Max suppression algorithm.
+
+* Discard all boxes with `Pc <= 0.4`  
+* While tehre are any remaining boxes : 
+    * Pick the box with the largest `Pc`
+    * Output that as a prediction
+    * Discard any remaining boxes with `IOU>=0.5` with the box output in the previous step
+    
+Non-max suppression uses the very important function called **"Intersection over Union"**, or IoU. Here is an exmaple of non max suppression algorithm: on input the aglorithm receive 4 overlapping bounding boxes, and the output returns only one
+
+![image](./docs/images/iou.png)
+
+
+
+
+
+
+
+
+
+
+
