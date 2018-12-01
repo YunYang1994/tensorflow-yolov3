@@ -53,13 +53,13 @@ class parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "--iou_threshold",   "-it", default=0.5, type=float,
+            "--iou_threshold",   "-it", default=0.3, type=float,
             help="[default: %(default)s] The iou_threshold for gpu nms",
             metavar="<IT>",
         )
 
         self.add_argument(
-            "--score_threshold", "-st", default=0.4, type=float,
+            "--score_threshold", "-st", default=0.2, type=float,
             help="[default: %(default)s] The iou_threshold for gpu nms",
             metavar="<ST>",
         )
