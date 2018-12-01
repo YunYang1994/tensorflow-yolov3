@@ -31,8 +31,8 @@ $ python nms_demo.py
 
 continue to work ...
 
-## part 4. How does yolov3 works
-YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Before we get out hands dirty with code, we must understand how YOLO works.
+## part 4. Why it is so magical ?
+YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Although we has successfully run these codes, we must understand how YOLO works. 
 ### 4.1 Architercutre details
 In this project, I use pretrained weights, where we have 80 trained yolo classes, for recognition. The class label is represented as  `c`  and it's integer from 1 to 80, each number represent the class label accordingly. If  `c=3` , then the classified object is a  `car`.  The image features learned by the `Darknet-53` convolutional layers are passed onto a classifier/regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).Thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!
 ![image](./docs/images/levio.jpeg)
