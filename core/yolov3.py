@@ -11,8 +11,8 @@
 #
 #================================================================
 
-import common
 import tensorflow as tf
+from core import common
 slim = tf.contrib.slim
 
 
@@ -71,6 +71,7 @@ class yolov3(object):
         self._BATCH_NORM_DECAY = batch_norm_decay
         self._LEAKY_RELU = leaky_relu
         self._NUM_CLASSES = num_classes
+        self.feature_maps = []
 
     def _yolo_block(self, inputs, filters):
         inputs = common._conv2d_fixed_padding(inputs, filters * 1, 1)
@@ -88,6 +89,7 @@ class yolov3(object):
                                 stride=1, normalizer_fn=None,
                                 activation_fn=None,
                                 biases_initializer=tf.zeros_initializer())
+        self.feature_maps.append(predictions)
         shape = predictions.get_shape().as_list()
         # grid cell size
         grid_size = shape[1:3] if len(shape) == 4 else shape[0:2]
@@ -123,9 +125,9 @@ class yolov3(object):
         box_sizes = box_sizes * stride
 
         classes_prob = tf.nn.sigmoid(classes)
-        feature_map = tf.concat([box_centers, box_sizes, confidence, classes_prob], axis=-1)
+        detection = tf.concat([box_centers, box_sizes, confidence, classes_prob], axis=-1)
 
-        return feature_map
+        return detection
 
     @staticmethod
     def _upsample(inputs, out_shape):
@@ -170,8 +172,8 @@ class yolov3(object):
 
                 with tf.variable_scope('yolo-v3'):
                     route, inputs = self._yolo_block(inputs, 512)
-                    feature_map_1 = self._detection_layer(inputs, self._ANCHORS[6:9], img_size)
-                    feature_map_1 = tf.identity(feature_map_1, name='feature_map_1')
+                    detection_1 = self._detection_layer(inputs, self._ANCHORS[6:9], img_size)
+                    detection_1 = tf.identity(detection_1, name='detection_1')
 
                     inputs = common._conv2d_fixed_padding(route, 256, 1)
                     upsample_size = route_2.get_shape().as_list()
@@ -179,8 +181,8 @@ class yolov3(object):
                     inputs = tf.concat([inputs, route_2], axis=3)
 
                     route, inputs = self._yolo_block(inputs, 256)
-                    feature_map_2 = self._detection_layer(inputs, self._ANCHORS[3:6], img_size)
-                    feature_map_2 = tf.identity(feature_map_2, name='feature_map_2')
+                    detection_2 = self._detection_layer(inputs, self._ANCHORS[3:6], img_size)
+                    detection_2 = tf.identity(detection_2, name='detection_2')
 
                     inputs = common._conv2d_fixed_padding(route, 128, 1)
                     upsample_size = route_1.get_shape().as_list()
@@ -188,13 +190,13 @@ class yolov3(object):
                     inputs = tf.concat([inputs, route_1], axis=3)
 
                     route, inputs = self._yolo_block(inputs, 128)
-                    feature_map_3 = self._detection_layer(inputs, self._ANCHORS[0:3], img_size)
-                    feature_map_3 = tf.identity(feature_map_3, name='feature_map_3')
+                    detection_3 = self._detection_layer(inputs, self._ANCHORS[0:3], img_size)
+                    detection_3 = tf.identity(detection_3, name='detection_3')
 
-                    feature_map = tf.concat([feature_map_1, feature_map_2, feature_map_3], axis=1)
-                    feature_map = tf.identity(feature_map, name='feature_map')
+                    detections = tf.concat([detection_1, detection_2, detection_3], axis=1)
+                    detections = tf.identity(detections, name='detections')
 
-            return feature_map
+                    return detections
 
     def compute_loss(self, ):
         pass

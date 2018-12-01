@@ -1,0 +1,118 @@
+#! /usr/bin/env python
+# coding=utf-8
+#================================================================
+#   Copyright (C) 2018 * Ltd. All rights reserved.
+#
+#   Editor      : VIM
+#   File name   : convert_weight.py
+#   Author      : YunYang1994
+#   Created date: 2018-11-27 12:37:22
+#   Description :
+#
+#================================================================
+
+import os
+import sys
+import wget
+import argparse
+import tensorflow as tf
+from core import yolov3, utils
+
+
+class parser(argparse.ArgumentParser):
+
+    def __init__(self,description):
+        super(parser, self).__init__(description)
+
+        self.add_argument(
+            "--ckpt_file", "-cf", default='./checkpoint/yolov3.ckpt', type=str,
+            help="[default: %(default)s] The checkpoint file ...",
+            metavar="<CF>",
+        )
+
+        self.add_argument(
+            "--weights_path", "-wp", default='./checkpoint/yolov3.weights', type=str,
+            help="[default: %(default)s] Download binary file with desired weights",
+            metavar="<WP>",
+        )
+
+        self.add_argument(
+            "--convert", "-cv", action='store_true',
+            help="[default: %(default)s] Downloading yolov3 weights and convert them",
+        )
+
+        self.add_argument(
+            "--freeze", "-fz", action='store_true',
+            help="[default: %(default)s] freeze the yolov3 graph to pb ...",
+        )
+
+        self.add_argument(
+            "--image_size", "-is", default=416, type=int,
+            help="[default: %(default)s] The image size, 416 or 608",
+            metavar="<IS>",
+        )
+
+        self.add_argument(
+            "--iou_threshold",   "-it", default=0.5, type=float,
+            help="[default: %(default)s] The iou_threshold for gpu nms",
+            metavar="<IT>",
+        )
+
+        self.add_argument(
+            "--score_threshold", "-st", default=0.4, type=float,
+            help="[default: %(default)s] The iou_threshold for gpu nms",
+            metavar="<ST>",
+        )
+
+
+def main(argv):
+
+    flags = parser(description="freeze yolov3 graph from checkpoint file").parse_args()
+    classes = utils.get_classes("./data/coco.names")
+    num_classes = len(classes)
+    SIZE = flags.image_size
+    print("=> the input image size is [%d, %d]" %(SIZE, SIZE))
+    model = yolov3.yolov3(num_classes)
+
+    with tf.Graph().as_default() as graph:
+
+        sess = tf.Session(graph=graph)
+        inputs = tf.placeholder(tf.float32, [1, SIZE, SIZE, 3]) # placeholder for detector inputs
+        with tf.variable_scope('yolov3'):
+            detections = model.forward(inputs)
+            load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), flags.weights_path)
+
+        var_list = tf.global_variables(scope='yolov3')
+        saver = tf.train.Saver(var_list=var_list)
+
+        boxes, scores = utils.get_boxes_scores(detections)
+        print("=>", boxes, scores)
+        boxes, scores, labels = utils.gpu_nms(boxes, scores, num_classes, 20,
+                                              flags.score_threshold, flags.iou_threshold)
+        print("=>", boxes, scores, labels)
+        feature_map_1, feature_map_2, feature_map_3 = model.feature_maps
+        print("=>", feature_map_1, feature_map_2, feature_map_3)
+
+        if flags.convert:
+            if not os.path.exists(flags.weights_path):
+                print('=> downloading yolov3 weights ... ')
+                wget.download('https://pjreddie.com/media/files/yolov3.weights', flags.weights_path)
+
+            sess.run(load_ops)
+            save_path = saver.save(sess, save_path=flags.ckpt_file)
+            print('=> model saved in path: {}'.format(save_path))
+
+        if flags.freeze:
+            saver.restore(sess, flags.ckpt_file)
+            print('=> checkpoint file restored from ', flags.ckpt_file)
+            utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', ["concat_1", "concat_2", "concat_3"])
+            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', ["concat", "mul"])
+            utils.freeze_graph(sess, './checkpoint/yolov3_feature.pb', ["yolov3/yolo-v3/Conv_6/BiasAdd",
+                                                                        "yolov3/yolo-v3/Conv_14/BiasAdd",
+                                                                        "yolov3/yolo-v3/Conv_22/BiasAdd",])
+
+
+if __name__ == "__main__": main(sys.argv)
+
+
+

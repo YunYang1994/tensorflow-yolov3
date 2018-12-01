@@ -16,9 +16,9 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageFont, ImageDraw
 
-def get_boxes_scores(feature_map):
+def get_boxes_scores(detections):
     """
-    :param feature_map: outputs of YOLOv3 network of shape [?, 10647, num_classes+5]
+    :param detections: outputs of YOLOv3 network of shape [?, 10647, num_classes+5]
                         prediction in three scale -> (52×52+26×26+ 13×13)×3 = 10647
     :return
             boxes -- tensor of shape [None, 10647, 4], containing (x0, y0, x1, y1)
@@ -28,7 +28,7 @@ def get_boxes_scores(feature_map):
     """
 
     box_info, confidence, probability = tf.split(
-                                             feature_map, [4, 1, -1], axis=-1)
+                                              detections, [4, 1, -1], axis=-1)
     center_x, center_y, width, height = tf.split(box_info, [1,1,1,1], axis=-1)
     x0 = center_x - width  / 2
     y0 = center_y - height / 2
@@ -153,6 +153,7 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
         picked_boxes.append(filter_boxes[indices])
         picked_score.append(filter_scores[indices])
         picked_label.append(np.ones(len(indices), dtype='int32')*i)
+    if len(picked_boxes) == 0: return None, None, None
 
     boxes = np.concatenate(picked_boxes, axis=0)
     score = np.concatenate(picked_score, axis=0)
@@ -161,20 +162,15 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
     return boxes, score, label
 
 
-##### draw bounding box #####
-def draw_boxes(boxes, scores, labels, image, classes, font='./data/font/FiraMono-Medium.otf', show=True):
-
-    detection_size = [416, 416]
+def draw_boxes(boxes, scores, labels, image, classes,
+               detection_size=[416,416],font='./data/font/FiraMono-Medium.otf', show=True):
+    if boxes is None: return image
     draw = ImageDraw.Draw(image)
-
     # draw settings
-    font = ImageFont.truetype(font = font,
-                              size = np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
-    hsv_tuples = [( x / len(classes), 0.8, 1.0) for x in range(len(classes))]
+    font = ImageFont.truetype(font = font, size = np.floor(2e-2 * image.size[1]).astype('int32'))
+    hsv_tuples = [( x / len(classes), 0.9, 1.0) for x in range(len(classes))]
     colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
     colors = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), colors))
-
-    # thickness = (image.size[0] + image.size[1]) // 300
     for i in range(len(labels)): # for each bounding box, do:
         bbox, score, label = boxes[i], scores[i], classes[labels[i]]
         bbox_text = "%s %.2f" %(label, score)
@@ -185,10 +181,10 @@ def draw_boxes(boxes, scores, labels, image, classes, font='./data/font/FiraMono
         bbox = list((bbox.reshape(2,2) * ratio).reshape(-1))
 
         draw.rectangle(bbox, outline=colors[labels[i]], width=3)
-        draw.rectangle([tuple(bbox[:2]), tuple(np.array(bbox[:2])+text_size)], fill=colors[labels[i]])
-
+        text_origin = bbox[:2]-np.array([0, text_size[1]])
+        draw.rectangle([tuple(text_origin), tuple(text_origin+text_size)], fill=colors[labels[i]])
         # # draw bbox
-        draw.text(bbox[:2], bbox_text, fill=(0,0,0), font=font)
+        draw.text(tuple(text_origin), bbox_text, fill=(0,0,0), font=font)
 
     image.show() if show else None
     return image
@@ -229,5 +225,61 @@ def read_pb_return_tensors(graph, pb_file, return_elements):
 
     return input_tensor, output_tensors
 
+def load_weights(var_list, weights_file):
+    """
+    Loads and converts pre-trained weights.
+    :param var_list: list of network variables.
+    :param weights_file: name of the binary file.
+    :return: list of assign ops
+    """
+    with open(weights_file, "rb") as fp:
+        np.fromfile(fp, dtype=np.int32, count=5)
+        weights = np.fromfile(fp, dtype=np.float32)
 
+    ptr = 0
+    i = 0
+    assign_ops = []
+    while i < len(var_list) - 1:
+        var1 = var_list[i]
+        var2 = var_list[i + 1]
+        # do something only if we process conv layer
+        if 'Conv' in var1.name.split('/')[-2]:
+            # check type of next layer
+            if 'BatchNorm' in var2.name.split('/')[-2]:
+                # load batch norm params
+                gamma, beta, mean, var = var_list[i + 1:i + 5]
+                batch_norm_vars = [beta, gamma, mean, var]
+                for var in batch_norm_vars:
+                    shape = var.shape.as_list()
+                    num_params = np.prod(shape)
+                    var_weights = weights[ptr:ptr + num_params].reshape(shape)
+                    ptr += num_params
+                    assign_ops.append(tf.assign(var, var_weights, validate_shape=True))
+                # we move the pointer by 4, because we loaded 4 variables
+                i += 4
+            elif 'Conv' in var2.name.split('/')[-2]:
+                # load biases
+                bias = var2
+                bias_shape = bias.shape.as_list()
+                bias_params = np.prod(bias_shape)
+                bias_weights = weights[ptr:ptr +
+                                       bias_params].reshape(bias_shape)
+                ptr += bias_params
+                assign_ops.append(tf.assign(bias, bias_weights, validate_shape=True))
+                # we loaded 1 variable
+                i += 1
+            # we can load weights of conv layer
+            shape = var1.shape.as_list()
+            num_params = np.prod(shape)
+
+            var_weights = weights[ptr:ptr + num_params].reshape(
+                (shape[3], shape[2], shape[0], shape[1]))
+            # remember to transpose to column-major
+            var_weights = np.transpose(var_weights, (2, 3, 1, 0))
+            ptr += num_params
+            assign_ops.append(
+                tf.assign(var1, var_weights, validate_shape=True))
+            i += 1
+
+    return assign_ops
 

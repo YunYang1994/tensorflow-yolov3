@@ -6,54 +6,50 @@
 #   Editor      : VIM
 #   File name   : test.py
 #   Author      : YunYang1994
-#   Created date: 2018-11-27 12:04:09
+#   Created date: 2018-11-30 15:56:37
 #   Description :
 #
 #================================================================
 
+import cv2
 import time
 import numpy as np
-from PIL import Image
 import tensorflow as tf
-from core import utils, yolov3
+from PIL import Image
+from core import utils
 
 
-img = Image.open('./data/demo_data/dog.jpg')
-img_resized = img.resize(size=(416, 416))
-
+SIZE = [416, 416]
+video_path = "./data/demo_data/project_video.mp4"
 classes = utils.get_classes('./data/coco.names')
 num_classes = len(classes)
-model = yolov3.yolov3(num_classes)
+input_tensor, output_tensors = utils.read_pb_return_tensors(tf.get_default_graph(),
+                                                            "./checkpoint/yolov3_cpu_nms.pb",
+                                                            ["Placeholder:0", "concat:0", "mul:0"])
+with tf.Session() as sess:
+    vid = cv2.VideoCapture(video_path)
+    while True:
+        return_value, frame = vid.read()
+        if return_value:
+            image = Image.fromarray(frame)
+        else:
+            raise ValueError("No image!")
+        img_resized = np.array(image.resize(size=tuple(SIZE)), dtype=np.float32)
+        prev_time = time.time()
 
-with tf.Graph().as_default() as graph:
+        boxes, scores = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
+        boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes, score_thresh=0.4, iou_thresh=0.5)
+        image = utils.draw_boxes(boxes, scores, labels, image, classes, SIZE, show=False)
 
-    sess = tf.Session(graph=graph)
-    # placeholder for detector inputs
-    inputs = tf.placeholder(tf.float32, [1, 416, 416, 3])
-
-    with tf.variable_scope('detector'):
-        feature_map = model.forward(inputs)
-
-    boxes, scores = utils.get_boxes_scores(feature_map)
-    # boxes, scores, labels = utils.gpu_nms(boxes, scores, num_classes, 20, 0.3, 0.5)
-
-    saver = tf.train.Saver(var_list=tf.global_variables(scope='detector'))
-    saver.restore(sess, './checkpoint/yolov3.ckpt')
-
-    # output_tensors = [boxes, confs, probs]
-    output_tensors = [boxes, scores]
-    # for i in range(10):
-        # start = time.time()
-        # boxes, scores, labels = sess.run(output_tensors, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
-        # print(boxes, time.time()-start)
-
-    for i in range(10):
-        start = time.time()
-        boxes, scores = sess.run(output_tensors, feed_dict={inputs: [np.array(img_resized, dtype=np.float32)]})
-        boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes)
-        print(boxes, time.time()-start)
-
-image = utils.draw_boxes(boxes, scores, labels, img, classes, show=True)
+        curr_time = time.time()
+        exec_time = curr_time - prev_time
+        result = np.asarray(image)
+        info = "time: %.2f ms" %(1000*exec_time)
+        cv2.putText(result, text=info, org=(50, 70), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=1, color=(255, 0, 0), thickness=2)
+        cv2.namedWindow("result", cv2.WINDOW_AUTOSIZE)
+        cv2.imshow("result", result)
+        if cv2.waitKey(1) & 0xFF == ord('q'): break
 
 
 
