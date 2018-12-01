@@ -1,4 +1,4 @@
-## introduction
+## part1. Introduction
 
 Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This repository  is inspired by [Paweł Kapica](https://github.com/mystic123) and [Kiril Cvetkov
 ](https://github.com/kirilcvetkov92). The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
@@ -8,7 +8,7 @@ Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This reposito
 - [x] Non max suppression on the both `GPU` and `CPU` is supported
 - [x] Training pipeline
 
-## quick start
+## part2. Quick start
 1. Clone this file
 ```bashrc
 $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
@@ -27,11 +27,11 @@ $ python convert_weight.py --convert --freeze
 $ python nms_demo.py
 ```
 ![image](./docs/images/611_result.jpg)
-## train for your own dataset
+## part3. Train for your own dataset
 
-continue ...
+continue to work ...
 
-## How does yolov3 works
+## part4. How does yolov3 works
 YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Before we get out hands dirty with code, we must understand how YOLO works.
 ### Architercutre details
 In this project, I use pretrained weights, where we have 80 trained yolo classes, for recognition. The class label is represented as  `c`  and it's integer from 1 to 80, each number represent the class label accordingly. If  `c=3` , then the classified object is a  `car`.  The image features learned by the `Darknet-53` convolutional layers are passed onto a classifier/regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).Thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!
@@ -55,6 +55,7 @@ The output result may contain several rectangles that are false positives or ove
 
 ```
 # Step 1: Create a filtering mask based on "box_class_scores" by using "threshold".
+score_thresh=0.4
 mask = tf.greater_equal(scores, tf.constant(score_thresh))
 ```
 
@@ -67,7 +68,12 @@ Even after yolo filtering by thresholding over, we still have a lot of overlappi
     * Pick the box with the largest `Pc`
     * Output that as a prediction
     * Discard any remaining boxes with `IOU>=0.5` with the box output in the previous step
-    
+
+```
+for i in range(num_classes):
+	tf.image.non_max_suppression(boxes, score[:,i], iou_threshold=0.5) 
+ ```
+ 
 Non-max suppression uses the very important function called **"Intersection over Union"**, or IoU. Here is an exmaple of non max suppression algorithm: on input the aglorithm receive 4 overlapping bounding boxes, and the output returns only one
 
 ![image](./docs/images/iou.png)
