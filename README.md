@@ -22,7 +22,7 @@ $ pip install -r ./docs/requirements.txt
 ```bashrc
 $ python convert_weight.py --convert --freeze
 ```
-4. The you will get some `.pb` files in the dir `./checkpoint`,  run the demo script
+4. Then you will get some `.pb` files in the dir `./checkpoint`,  run the demo script
 ```bashrc
 $ python nms_demo.py
 ```
