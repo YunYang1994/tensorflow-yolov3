@@ -16,30 +16,6 @@ import numpy as np
 import tensorflow as tf
 from PIL import ImageFont, ImageDraw
 
-def get_boxes_scores(detections):
-    """
-    :param detections: outputs of YOLOv3 network of shape [?, 10647, num_classes+5]
-                        prediction in three scale -> (52×52+26×26+ 13×13)×3 = 10647
-    :return
-            boxes -- tensor of shape [None, 10647, 4], containing (x0, y0, x1, y1)
-                    coordinates of selected boxes
-            confidence -- tensor of shape [None, 10647, 1]
-            probability -- tensor of shape [None, 10647, num_classes]
-    """
-
-    box_info, confidence, probability = tf.split(
-                                              detections, [4, 1, -1], axis=-1)
-    center_x, center_y, width, height = tf.split(box_info, [1,1,1,1], axis=-1)
-    x0 = center_x - width  / 2
-    y0 = center_y - height / 2
-    x1 = center_x + width  / 2
-    y1 = center_y + height / 2
-
-    boxes = tf.concat([x0, y0, x1, y1], axis=-1)
-    scores = confidence * probability # multiply box probability(p) with class probability
-
-    return boxes, scores
-
 # Discard all boxes with low scores and high IOU
 def gpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thresh=0.5):
     """

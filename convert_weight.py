@@ -75,18 +75,19 @@ def main(argv):
     model = yolov3.yolov3(num_classes)
 
     with tf.Graph().as_default() as graph:
-
         sess = tf.Session(graph=graph)
         inputs = tf.placeholder(tf.float32, [1, SIZE, SIZE, 3]) # placeholder for detector inputs
-        with tf.variable_scope('yolov3'):
-            detections = model.forward(inputs)
 
-        boxes, scores = utils.get_boxes_scores(detections)
+        with tf.variable_scope('yolov3'):
+            feature_map = model.forward(inputs)
+
+        # boxes, scores = utils.get_boxes_scores(detections)
+        boxes, scores = model.predict(feature_map)
         print("=>", boxes, scores)
         boxes, scores, labels = utils.gpu_nms(boxes, scores, num_classes, 20,
                                               flags.score_threshold, flags.iou_threshold)
         print("=>", boxes, scores, labels)
-        feature_map_1, feature_map_2, feature_map_3 = model.feature_maps
+        feature_map_1, feature_map_2, feature_map_3 = feature_map
         print("=>", feature_map_1, feature_map_2, feature_map_3)
         saver = tf.train.Saver(var_list=tf.global_variables(scope='yolov3'))
 
@@ -103,11 +104,11 @@ def main(argv):
         if flags.freeze:
             saver.restore(sess, flags.ckpt_file)
             print('=> checkpoint file restored from ', flags.ckpt_file)
-            utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', ["concat_1", "concat_2", "concat_3"])
-            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', ["concat", "mul"])
-            utils.freeze_graph(sess, './checkpoint/yolov3_feature.pb', ["yolov3/yolo-v3/Conv_6/BiasAdd",
-                                                                        "yolov3/yolo-v3/Conv_14/BiasAdd",
-                                                                        "yolov3/yolo-v3/Conv_22/BiasAdd",])
+            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', ["concat_7", "mul_9"])
+            utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', ["concat_8", "concat_9", "concat_10"])
+            utils.freeze_graph(sess, './checkpoint/yolov3_feature.pb', ["yolov3/yolo-v3/feature_map_1",
+                                                                        "yolov3/yolo-v3/feature_map_2",
+                                                                        "yolov3/yolo-v3/feature_map_3",])
 
 
 if __name__ == "__main__": main(sys.argv)

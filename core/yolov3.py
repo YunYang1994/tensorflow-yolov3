@@ -15,7 +15,6 @@ import tensorflow as tf
 from core import common
 slim = tf.contrib.slim
 
-
 class darknet53(object):
     """network for performing feature extraction"""
 
@@ -86,26 +85,31 @@ class yolov3(object):
         inputs = common._conv2d_fixed_padding(inputs, filters * 2, 3)
         return route, inputs
 
-    def _detection_layer(self, inputs, anchors, img_size):
+    def _detection_layer(self, inputs, anchors):
         num_anchors = len(anchors)
-        predictions = slim.conv2d(inputs, num_anchors * (5 + self._NUM_CLASSES), 1,
+        feature_map = slim.conv2d(inputs, num_anchors * (5 + self._NUM_CLASSES), 1,
                                 stride=1, normalizer_fn=None,
                                 activation_fn=None,
                                 biases_initializer=tf.zeros_initializer())
-        self.feature_maps.append(predictions)
-        shape = predictions.get_shape().as_list()
+        return feature_map
+
+    def _get_boxes_confs_scores(self, feature_map, anchors):
+
+        num_anchors = len(anchors)
+        self.feature_maps.append(feature_map)
+        shape = feature_map.get_shape().as_list()
         # grid cell size
         grid_size = shape[1:3] if len(shape) == 4 else shape[0:2]
 
         dim = grid_size[0] * grid_size[1]
         bbox_attrs = 5 + self._NUM_CLASSES
-        predictions = tf.reshape(predictions, [-1, num_anchors * dim, bbox_attrs])
+        feature_map = tf.reshape(feature_map, [-1, num_anchors * dim, bbox_attrs])
 
-        stride = (img_size[0] // grid_size[0], img_size[1] // grid_size[1])
+        stride = (self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1])
         anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
 
         box_centers, box_sizes, confidence, classes = tf.split(
-            predictions, [2, 2, 1, self._NUM_CLASSES], axis=-1)
+            feature_map, [2, 2, 1, self._NUM_CLASSES], axis=-1)
 
         box_centers = tf.nn.sigmoid(box_centers)
         confidence = tf.nn.sigmoid(confidence)
@@ -152,7 +156,7 @@ class yolov3(object):
         :return:
         """
         # it will be needed later on
-        img_size = inputs.get_shape().as_list()[1:3]
+        self.img_size = inputs.get_shape().as_list()[1:3]
         # normalize values to range [0..1]
         inputs = inputs / 255
         # set batch norm params
@@ -175,8 +179,8 @@ class yolov3(object):
 
                 with tf.variable_scope('yolo-v3'):
                     route, inputs = self._yolo_block(inputs, 512)
-                    detection_1 = self._detection_layer(inputs, self._ANCHORS[6:9], img_size)
-                    detection_1 = tf.identity(detection_1, name='detection_1')
+                    feature_map_1 = self._detection_layer(inputs, self._ANCHORS[6:9])
+                    feature_map_1 = tf.identity(feature_map_1, name='feature_map_1')
 
                     inputs = common._conv2d_fixed_padding(route, 256, 1)
                     upsample_size = route_2.get_shape().as_list()
@@ -184,8 +188,8 @@ class yolov3(object):
                     inputs = tf.concat([inputs, route_2], axis=3)
 
                     route, inputs = self._yolo_block(inputs, 256)
-                    detection_2 = self._detection_layer(inputs, self._ANCHORS[3:6], img_size)
-                    detection_2 = tf.identity(detection_2, name='detection_2')
+                    feature_map_2 = self._detection_layer(inputs, self._ANCHORS[3:6])
+                    feature_map_2 = tf.identity(feature_map_2, name='feature_map_2')
 
                     inputs = common._conv2d_fixed_padding(route, 128, 1)
                     upsample_size = route_1.get_shape().as_list()
@@ -193,13 +197,41 @@ class yolov3(object):
                     inputs = tf.concat([inputs, route_1], axis=3)
 
                     route, inputs = self._yolo_block(inputs, 128)
-                    detection_3 = self._detection_layer(inputs, self._ANCHORS[0:3], img_size)
-                    detection_3 = tf.identity(detection_3, name='detection_3')
+                    feature_map_3 = self._detection_layer(inputs, self._ANCHORS[0:3])
+                    feature_map_3 = tf.identity(feature_map_3, name='feature_map_3')
 
-                    detections = tf.concat([detection_1, detection_2, detection_3], axis=1)
-                    detections = tf.identity(detections, name='detections')
+            return feature_map_1, feature_map_2, feature_map_3
 
-                    return detections
+    def predict(self, feature_maps):
+        """
+        Note: given by feature_maps, compute the receptive field
+              and get boxes, confs and class_probs
+        input_argument: feature_maps -> [None, 13, 13, 255],
+                                        [None, 26, 26, 255],
+                                        [None, 52, 52, 255],
+        """
+        feature_map_1, feature_map_2, feature_map_3 = feature_maps
+
+        detection_1 = self._get_boxes_confs_scores(feature_map_1, self._ANCHORS[6:9])
+        detection_2 = self._get_boxes_confs_scores(feature_map_2, self._ANCHORS[3:6])
+        detection_3 = self._get_boxes_confs_scores(feature_map_3, self._ANCHORS[0:3])
+
+        detections = tf.concat([detection_1, detection_2, detection_3], axis=1)
+        detections = tf.identity(detections, name='detections')
+
+        box_info, confidence, probability = tf.split(
+                                                  detections, [4, 1, -1], axis=-1)
+        center_x, center_y, width, height = tf.split(box_info, [1,1,1,1], axis=-1)
+        x0 = center_x - width  / 2
+        y0 = center_y - height / 2
+        x1 = center_x + width  / 2
+        y1 = center_y + height / 2
+
+        boxes = tf.concat([x0, y0, x1, y1], axis=-1)
+        # multiply box probability(p) with class probability, axis=-1)
+        scores = confidence * probability
+        return boxes, scores
 
     def compute_loss(self, ):
+
         pass
