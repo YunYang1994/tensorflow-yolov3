@@ -93,26 +93,23 @@ class yolov3(object):
                                 biases_initializer=tf.zeros_initializer())
         return feature_map
 
-    def _get_boxes_confs_scores(self, feature_map, anchors):
+    def get_boxes_confs_scores(self, feature_map, anchors):
 
         num_anchors = len(anchors)
-        self.feature_maps.append(feature_map)
         shape = feature_map.get_shape().as_list()
-        # grid cell size
         grid_size = shape[1:3] if len(shape) == 4 else shape[0:2]
-
-        dim = grid_size[0] * grid_size[1]
-        bbox_attrs = 5 + self._NUM_CLASSES
-        feature_map = tf.reshape(feature_map, [-1, num_anchors * dim, bbox_attrs])
 
         stride = (self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1])
         anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
 
-        box_centers, box_sizes, confidence, classes = tf.split(
+        feature_map = tf.reshape(feature_map, [-1, grid_size[0], grid_size[1], num_anchors, 5 + self._NUM_CLASSES])
+
+        box_centers, box_sizes, confs, probs = tf.split(
             feature_map, [2, 2, 1, self._NUM_CLASSES], axis=-1)
 
         box_centers = tf.nn.sigmoid(box_centers)
-        confidence = tf.nn.sigmoid(confidence)
+        confs = tf.nn.sigmoid(confs)
+        probs = tf.nn.sigmoid(probs)
 
         grid_x = tf.range(grid_size[0], dtype=tf.float32)
         grid_y = tf.range(grid_size[1], dtype=tf.float32)
@@ -122,19 +119,16 @@ class yolov3(object):
         y_offset = tf.reshape(b, (-1, 1))
 
         x_y_offset = tf.concat([x_offset, y_offset], axis=-1)
-        x_y_offset = tf.reshape(tf.tile(x_y_offset, [1, num_anchors]), [1, -1, 2])
+        x_y_offset = tf.reshape(x_y_offset, [grid_size[0], grid_size[1], 1, 2])
 
         box_centers = box_centers + x_y_offset
         box_centers = box_centers * stride
 
-        anchors = tf.tile(anchors, [dim, 1])
         box_sizes = tf.exp(box_sizes) * anchors
         box_sizes = box_sizes * stride
 
-        classes_prob = tf.nn.sigmoid(classes)
-        detection = tf.concat([box_centers, box_sizes, confidence, classes_prob], axis=-1)
-
-        return detection
+        boxes = tf.concat([box_centers, box_sizes], axis=-1)
+        return x_y_offset, boxes, confs, probs
 
     @staticmethod
     def _upsample(inputs, out_shape):
@@ -202,6 +196,15 @@ class yolov3(object):
 
             return feature_map_1, feature_map_2, feature_map_3
 
+    def _reshape(self, x_y_offset, boxes, confs, probs):
+
+        grid_size = x_y_offset.shape.as_list()[:2]
+        boxes = tf.reshape(boxes, [-1, grid_size[0]*grid_size[1]*3, 4])
+        confs = tf.reshape(confs, [-1, grid_size[0]*grid_size[1]*3, 1])
+        probs = tf.reshape(probs, [-1, grid_size[0]*grid_size[1]*3, self._NUM_CLASSES])
+
+        return boxes, confs, probs
+
     def predict(self, feature_maps):
         """
         Note: given by feature_maps, compute the receptive field
@@ -211,27 +214,33 @@ class yolov3(object):
                                         [None, 52, 52, 255],
         """
         feature_map_1, feature_map_2, feature_map_3 = feature_maps
+        feature_map_anchors = [(feature_map_1, self._ANCHORS[6:9]),
+                               (feature_map_2, self._ANCHORS[3:6]),
+                               (feature_map_3, self._ANCHORS[0:3]),]
 
-        detection_1 = self._get_boxes_confs_scores(feature_map_1, self._ANCHORS[6:9])
-        detection_2 = self._get_boxes_confs_scores(feature_map_2, self._ANCHORS[3:6])
-        detection_3 = self._get_boxes_confs_scores(feature_map_3, self._ANCHORS[0:3])
+        results = [self.get_boxes_confs_scores(feature_map, anchors) for (feature_map, anchors) in feature_map_anchors]
+        boxes_list, confs_list, probs_list = [], [], []
 
-        detections = tf.concat([detection_1, detection_2, detection_3], axis=1)
-        detections = tf.identity(detections, name='detections')
+        for result in results:
+            boxes, confs, probs = self._reshape(*result)
+            boxes_list.append(boxes)
+            confs_list.append(confs)
+            probs_list.append(probs)
 
-        box_info, confidence, probability = tf.split(
-                                                  detections, [4, 1, -1], axis=-1)
-        center_x, center_y, width, height = tf.split(box_info, [1,1,1,1], axis=-1)
+        boxes = tf.concat(boxes_list, axis=1)
+        confs = tf.concat(confs_list, axis=1)
+        probs = tf.concat(probs_list, axis=1)
+
+        # boxes, confs, probs = tf.split(detections, [4, 1, -1], axis=-1)
+        center_x, center_y, width, height = tf.split(boxes, [1,1,1,1], axis=-1)
         x0 = center_x - width  / 2
         y0 = center_y - height / 2
         x1 = center_x + width  / 2
         y1 = center_y + height / 2
 
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
-        # multiply box probability(p) with class probability, axis=-1)
-        scores = confidence * probability
-        return boxes, scores
+        return boxes, confs, probs
 
-    def compute_loss(self, ):
+    def compute_loss(self, feature_map, gt_box, ignore_thresh=0.5):
 
         pass
