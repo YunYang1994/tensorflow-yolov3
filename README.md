@@ -8,6 +8,7 @@ Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This reposito
 - [x] Non max suppression on the both `GPU` and `CPU` is supported
 - [x] Training pipeline
 
+Hope it helps you, Start your tensorlfow-yolv3 journey here now!
 ## part 2. Quick start
 1. Clone this file
 ```bashrc
