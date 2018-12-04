@@ -29,7 +29,9 @@ $ python nms_demo.py
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train for your own dataset
 
-I am working now ...
+```bashrc
+$ python train.py
+```
 
 ## part 4. Why it is so magical ?
 YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Although we has successfully run these codes, we must understand how YOLO works. 
