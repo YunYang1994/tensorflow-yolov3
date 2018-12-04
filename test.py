@@ -21,6 +21,7 @@ from core import utils
 
 SIZE = [416, 416]
 video_path = "./data/demo_data/road.mp4"
+video_path = 0 # use camera
 classes = utils.get_classes('./data/coco.names')
 num_classes = len(classes)
 input_tensor, output_tensors = utils.read_pb_return_tensors(tf.get_default_graph(),
@@ -35,6 +36,7 @@ with tf.Session() as sess:
         else:
             raise ValueError("No image!")
         img_resized = np.array(image.resize(size=tuple(SIZE)), dtype=np.float32)
+        img_resized = img_resized / 255.
         prev_time = time.time()
 
         boxes, scores = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
@@ -50,6 +52,5 @@ with tf.Session() as sess:
         cv2.namedWindow("result", cv2.WINDOW_AUTOSIZE)
         cv2.imshow("result", result)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
-
 
 
