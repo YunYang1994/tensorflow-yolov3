@@ -25,6 +25,7 @@ $ python convert_weight.py --convert --freeze
 4. Then you will get some `.pb` files in the dir `./checkpoint`,  and run the demo script
 ```bashrc
 $ python nms_demo.py
+$ python test.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train for your own dataset
