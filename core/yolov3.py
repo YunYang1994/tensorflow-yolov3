@@ -128,13 +128,24 @@ class yolov3(object):
         boxes = tf.concat([box_centers, box_sizes], axis=-1)
         return x_y_offset, boxes, confs, probs
 
+    # @staticmethod
+    # def _upsample(inputs, out_shape):
+
+        # new_height, new_width = out_shape[1], out_shape[2]
+        # inputs = tf.image.resize_nearest_neighbor(inputs, (new_height, new_width))
+        # inputs = tf.identity(inputs, name='upsampled')
+
+        # return inputs
+
     @staticmethod
     def _upsample(inputs, out_shape):
-
+        """
+        replace resize_nearest_neighbor with conv2d_transpose To support TensorRT 5 optimization
+        """
         new_height, new_width = out_shape[1], out_shape[2]
-        inputs = tf.image.resize_nearest_neighbor(inputs, (new_height, new_width))
-        inputs = tf.identity(inputs, name='upsampled')
-
+        filters = 256 if (new_height == 26 and new_width==26) else 128
+        inputs = tf.layers.conv2d_transpose(inputs, filters, kernel_size=3, padding='same',
+                                            strides=(2,2), kernel_initializer=tf.ones_initializer())
         return inputs
 
     def forward(self, inputs, is_training=False, reuse=False):
