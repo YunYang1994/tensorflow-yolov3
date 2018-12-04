@@ -50,13 +50,13 @@ cv2.imshow("hello", images_[0]*255)
 cv2.waitKey(30)
 
 
-# loss = model.compute_loss(feature_map, bbox_true)
-# optimizer = tf.train.AdamOptimizer(0.001)
-# train_op = optimizer.minimize(loss)
-# sess.run(tf.global_variables_initializer())
-# for i in range(100):
-    # _, loss_val = sess.run([train_op, loss])
-    # print(i, loss_val)
+loss = model.compute_loss(feature_map, bbox_true)
+optimizer = tf.train.AdamOptimizer(0.001)
+train_op = optimizer.minimize(loss)
+sess.run(tf.global_variables_initializer())
+for i in range(100):
+    _, loss_val = sess.run([train_op, loss])
+    print(i, loss_val)
 
-# saver.save(sess, './checkpoint/yolov3_100.ckpt')
+saver.save(sess, './checkpoint/yolov3_100.ckpt')
 
