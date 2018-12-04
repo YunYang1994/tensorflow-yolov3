@@ -24,6 +24,7 @@ classes = utils.get_classes('./data/coco.names')
 num_classes = len(classes)
 img = Image.open('./data/demo_data/611.jpg')
 img_resized = np.array(img.resize(size=tuple(SIZE)), dtype=np.float32)
+img_resized = img_resized / 255.
 cpu_nms_graph, gpu_nms_graph = tf.Graph(), tf.Graph()
 
 # nms on GPU

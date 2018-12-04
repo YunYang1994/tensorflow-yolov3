@@ -12,7 +12,7 @@
 #================================================================
 
 import tensorflow as tf
-from core import common
+from core import common, utils
 slim = tf.contrib.slim
 
 class darknet53(object):
@@ -96,8 +96,7 @@ class yolov3(object):
     def get_boxes_confs_scores(self, feature_map, anchors):
 
         num_anchors = len(anchors)
-        shape = feature_map.get_shape().as_list()
-        grid_size = shape[1:3] if len(shape) == 4 else shape[0:2]
+        grid_size = tf.shape(feature_map)[1:3]
 
         stride = (self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1])
         anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
@@ -111,15 +110,14 @@ class yolov3(object):
         confs = tf.nn.sigmoid(confs)
         probs = tf.nn.sigmoid(probs)
 
-        grid_x = tf.range(grid_size[0], dtype=tf.float32)
-        grid_y = tf.range(grid_size[1], dtype=tf.float32)
+        grid_x = tf.range(grid_size[0], dtype=tf.int32)
+        grid_y = tf.range(grid_size[1], dtype=tf.int32)
         a, b = tf.meshgrid(grid_x, grid_y)
-
         x_offset = tf.reshape(a, (-1, 1))
         y_offset = tf.reshape(b, (-1, 1))
-
         x_y_offset = tf.concat([x_offset, y_offset], axis=-1)
         x_y_offset = tf.reshape(x_y_offset, [grid_size[0], grid_size[1], 1, 2])
+        x_y_offset = tf.cast(x_y_offset, tf.float32)
 
         box_centers = box_centers + x_y_offset
         box_centers = box_centers * stride
@@ -150,9 +148,7 @@ class yolov3(object):
         :return:
         """
         # it will be needed later on
-        self.img_size = inputs.get_shape().as_list()[1:3]
-        # normalize values to range [0..1]
-        inputs = inputs / 255
+        self.img_size = tf.shape(inputs)[1:3]
         # set batch norm params
         batch_norm_params = {
             'decay': self._BATCH_NORM_DECAY,
@@ -231,7 +227,6 @@ class yolov3(object):
         confs = tf.concat(confs_list, axis=1)
         probs = tf.concat(probs_list, axis=1)
 
-        # boxes, confs, probs = tf.split(detections, [4, 1, -1], axis=-1)
         center_x, center_y, width, height = tf.split(boxes, [1,1,1,1], axis=-1)
         x0 = center_x - width  / 2
         y0 = center_y - height / 2
@@ -241,6 +236,59 @@ class yolov3(object):
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
         return boxes, confs, probs
 
-    def compute_loss(self, feature_map, gt_box, ignore_thresh=0.5):
+    def compute_loss(self, feature_map, boxes_true, ignore_thresh=0.5):
+        """
+        Note: compute the loss
+        Arguments: feature_map, list -> [feature_map_1, feature_map_2, feature_map_3]
+                                        the shape of [None, 13, 13, 3*85]. etc
+        """
+        loss = 0.
+        _ANCHORS = [self._ANCHORS[6:9], self._ANCHORS[3:6], self._ANCHORS[0:3]]
 
-        pass
+        for i in range(3):
+            grid_size = tf.shape(feature_map[i])[1:3]
+            object_mask = boxes_true[i][..., 4:5]
+            class_probs = boxes_true[i][..., 5:]
+            grid, boxes_pred, confs_pred, probs_pred = self.get_boxes_confs_scores(
+                                                        feature_map=feature_map[i],
+                                                        anchors=_ANCHORS[i])
+            grid = tf.cast(grid, tf.float32)
+            pred_xy = boxes_pred[...,  :2] / tf.cast(self.img_size[::-1], tf.float32)
+            pred_wh = boxes_pred[..., 2:4] / tf.cast(self.img_size[::-1], tf.float32)
+            predictions = tf.reshape(feature_map[i],
+                                     [-1, grid_size[0], grid_size[1], 3, 5 + self._NUM_CLASSES])
+            pred_box = tf.concat([pred_xy, pred_wh], axis = -1)
+            raw_true_xy = boxes_true[i][..., :2] * tf.cast(grid_size[::-1], tf.float32) - grid
+            object_mask_bool = tf.cast(object_mask, dtype = tf.bool)
+            raw_true_wh = tf.log(tf.where(tf.equal(boxes_true[i][..., 2:4] / _ANCHORS[i] * tf.cast(self.img_size[::-1], tf.float32), 0),
+                                        tf.ones_like(boxes_true[i][..., 2:4]), boxes_true[i][..., 2:4] / _ANCHORS[i] * tf.cast(self.img_size[::-1], tf.float32)))
+
+            box_loss_scale = 2 - boxes_true[i][..., 2:3] * boxes_true[i][..., 3:4]
+            ignore_mask = tf.TensorArray(dtype = tf.float32, size = 1, dynamic_size = True)
+
+            def loop_body(internal_index, ignore_mask):
+
+                true_box = tf.boolean_mask(boxes_true[i][internal_index, ..., 0:4], object_mask_bool[internal_index, ..., 0])
+                iou = utils.box_iou(pred_box[internal_index], true_box)
+
+                best_iou = tf.reduce_max(iou, axis = -1)
+                ignore_mask = ignore_mask.write(internal_index, tf.cast(best_iou < ignore_thresh, tf.float32))
+                return internal_index + 1, ignore_mask
+
+            _, ignore_mask = tf.while_loop(lambda internal_index, ignore_mask : internal_index < tf.shape(feature_map[0])[0], loop_body, [0, ignore_mask])
+
+            ignore_mask = ignore_mask.stack()
+            ignore_mask = tf.expand_dims(ignore_mask, axis = -1)
+
+            xy_loss = object_mask * box_loss_scale * tf.nn.sigmoid_cross_entropy_with_logits(labels = raw_true_xy, logits = predictions[..., 0:2])
+            wh_loss = object_mask * box_loss_scale * 0.5 * tf.square(raw_true_wh - predictions[..., 2:4])
+            confidence_loss = object_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels = object_mask, logits = predictions[..., 4:5]) + (1 - object_mask) * tf.nn.sigmoid_cross_entropy_with_logits(labels = object_mask, logits = predictions[..., 4:5]) * ignore_mask
+            class_loss = object_mask * tf.nn.sigmoid_cross_entropy_with_logits(labels =  class_probs, logits = predictions[..., 5:])
+            xy_loss = tf.reduce_sum(xy_loss) / tf.cast(tf.shape(feature_map[0])[0], tf.float32)
+            wh_loss = tf.reduce_sum(wh_loss) / tf.cast(tf.shape(feature_map[0])[0], tf.float32)
+            confidence_loss = tf.reduce_sum(confidence_loss) / tf.cast(tf.shape(feature_map[0])[0], tf.float32)
+            class_loss = tf.reduce_sum(class_loss) / tf.cast(tf.shape(feature_map[0])[0], tf.float32)
+
+            loss += xy_loss + wh_loss + confidence_loss + class_loss
+
+        return loss
