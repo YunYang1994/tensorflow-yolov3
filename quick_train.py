@@ -12,7 +12,6 @@
 #================================================================
 
 
-import cv2
 from PIL import Image
 import numpy as np
 from core import utils
@@ -21,25 +20,20 @@ classes = utils.read_coco_names('./data/coco.names')
 
 data = open('./data/train_data/quick_train_data.txt', 'r').readlines()
 
-example = data[0].split(' ')
+example = data[5].split(' ')
 
+image_path = example[0]
+boxes_num = len(example[1:]) // 5
 
+bboxes = np.zeros([boxes_num, 4], dtype=np.float64)
+labels = np.zeros([boxes_num,  ], dtype=np.int32)
 
+for i in range(boxes_num):
+    labels[i] = example[1+i*5]
+    bboxes[i] = [float(x) for x in example[2+i*5:6+i*5]]
 
-# image_path, category_id, x_min, y_min, x_max, y_max = example
+scores = np.array([1]*boxes_num)
 
-# id = int(category_id)
-# x_min = float(x_min)
-# x_max = float(x_max)
-# y_min = float(y_min)
-# y_max = float(y_max)
+image = Image.open(image_path)
 
-
-# boxes = np.array([x_min, y_min, x_max, y_max])
-# boxes = boxes.reshape([1, 4])
-# scores = np.array([1])
-# labels = np.array([id])
-
-# image = Image.open(image_path)
-
-# utils.draw_boxes(boxes, scores, labels, image, classes, image.size)
+utils.draw_boxes(bboxes, scores, labels, image, classes, image.size)
