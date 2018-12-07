@@ -46,7 +46,7 @@ Then you are supposed to extract some useful information such ad bounding box, c
 ```
 $ python data/extract_coco.py --dataset_info_path ./data/train_data/train2017.txt
 ```
- Here is an example row for one image in the `./data/train_data/train2017.txt`:<br>
+As a result, you will get  `./data/train_data/train2017.txt`.  Here is an example row for one image:<br>
 ```
 /home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 20 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94
 /home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 16 55.38 132.63 519.84 380.4
