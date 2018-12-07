@@ -68,7 +68,7 @@ class parser(argparse.ArgumentParser):
 def main(argv):
 
     flags = parser(description="freeze yolov3 graph from checkpoint file").parse_args()
-    classes = utils.get_classes("./data/coco.names")
+    classes = utils.read_coco_names("./data/coco.names")
     num_classes = len(classes)
     SIZE = flags.image_size
     print("=> the input image size is [%d, %d]" %(SIZE, SIZE))

@@ -4,7 +4,7 @@
 #   Copyright (C) 2018 * Ltd. All rights reserved.
 #
 #   Editor      : VIM
-#   File name   : test.py
+#   File name   : video_demo.py
 #   Author      : YunYang1994
 #   Created date: 2018-11-30 15:56:37
 #   Description :
@@ -22,7 +22,7 @@ from core import utils
 SIZE = [416, 416]
 video_path = "./data/demo_data/road.mp4"
 video_path = 0 # use camera
-classes = utils.get_classes('./data/coco.names')
+classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
 input_tensor, output_tensors = utils.read_pb_return_tensors(tf.get_default_graph(),
                                                             "./checkpoint/yolov3_cpu_nms.pb",

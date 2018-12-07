@@ -25,14 +25,34 @@ $ python convert_weight.py --convert --freeze
 4. Then you will get some `.pb` files in the dir `./checkpoint`,  and run the demo script
 ```bashrc
 $ python nms_demo.py
-$ python test.py # if use camera, set video_path = 0
+$ python video_demo.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train for your own dataset
-
-```bashrc
-$ python train.py
+### 3.1 quick train
 ```
+$ python quick_train.py
+```
+### 3.2 train coco dataset
+Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/`
+```bashrc
+$ cd data/train_data
+$ wget http://images.cocodataset.org/zips/train2017.zip
+$ unzip train2017.zip
+$ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+$ unzip annotations_trainval2017.zip
+```
+Then you are supposed to extract some useful information such ad bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
+```
+$ python data/extract_coco.py --dataset_info_path ./data/train_data/train2017.txt
+```
+ Here is an example row for one image in the `./data/train_data/train2017.txt`:<br>
+```
+/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 20 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94
+/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 16 55.38 132.63 519.84 380.4
+# image_path, category_id, x_min, y_min, x_max, y_max, category_id, x_min, y_min, ...
+```
+
 
 ## part 4. Why it is so magical ?
 YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Although we has successfully run these codes, we must understand how YOLO works. 

@@ -20,7 +20,7 @@ from core import utils
 
 SIZE = [416, 416]
 # SIZE = [608, 608]
-classes = utils.get_classes('./data/coco.names')
+classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
 img = Image.open('./data/demo_data/611.jpg')
 img_resized = np.array(img.resize(size=tuple(SIZE)), dtype=np.float32)

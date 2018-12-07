@@ -140,6 +140,13 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
 
 def draw_boxes(boxes, scores, labels, image, classes,
                detection_size=[416,416],font='./data/font/FiraMono-Medium.otf', show=True):
+    """
+    :param boxes, shape of [num, 4]
+    :param scores, shape of [num, ]
+    :param labels, shape of [num, ]
+    :param image,
+    :param classes, the return list from the function `read_coco_names`
+    """
     if boxes is None: return image
     draw = ImageDraw.Draw(image)
     # draw settings
@@ -165,7 +172,7 @@ def draw_boxes(boxes, scores, labels, image, classes,
     image.show() if show else None
     return image
 
-def get_classes(class_file_name):
+def read_coco_names(class_file_name):
     names = {}
     with open(class_file_name, 'r') as data:
         for ID, name in enumerate(data):
@@ -258,4 +265,9 @@ def load_weights(var_list, weights_file):
             i += 1
 
     return assign_ops
+
+
+
+
+
 
