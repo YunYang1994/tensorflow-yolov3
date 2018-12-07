@@ -14,6 +14,7 @@
 import os
 import sys
 import wget
+import time
 import argparse
 import tensorflow as tf
 from core import yolov3, utils
@@ -94,8 +95,13 @@ def main(argv):
 
         if flags.convert:
             if not os.path.exists(flags.weights_path):
-                print('=> downloading yolov3 weights ... ')
-                wget.download('https://pjreddie.com/media/files/yolov3.weights', flags.weights_path)
+                url = 'https://pjreddie.com/media/files/yolov3.weights'
+                for i in range(3):
+                    time.sleep(1)
+                    print("=> Please check whether %s exists ? " %flags.weights_path)
+                print("=> if not, it will take a while to download it from %s" %url)
+                print('=> Downloading yolov3 weights ... ')
+                wget.download(url, flags.weights_path)
 
             load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), flags.weights_path)
             sess.run(load_ops)
