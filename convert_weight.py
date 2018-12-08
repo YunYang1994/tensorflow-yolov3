@@ -98,8 +98,8 @@ def main(argv):
                 url = 'https://pjreddie.com/media/files/yolov3.weights'
                 for i in range(3):
                     time.sleep(1)
-                    print("=> Please check whether %s exists ? " %flags.weights_path)
-                print("=> if not, it will take a while to download it from %s" %url)
+                    print("=> %s does not exists ! " %flags.weights_path)
+                print("=> It will take a while to download it from %s" %url)
                 print('=> Downloading yolov3 weights ... ')
                 wget.download(url, flags.weights_path)
 
