@@ -18,7 +18,7 @@ from core import yolov3, dataset
 sess = tf.Session()
 
 train_reader = dataset.Reader('train', './data/train_data/TFrecord',
-                      './yolo_anchors.txt', 80, input_shape=416, max_boxes=20)
+                      './data/yolo_anchors.txt', 80, input_shape=416, max_boxes=20)
 train_data = train_reader.build_dataset(1)
 
 iterator = train_data.make_one_shot_iterator()

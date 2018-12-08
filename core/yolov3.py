@@ -65,11 +65,13 @@ class darknet53(object):
 
 class yolov3(object):
 
-    def __init__(self, num_classes=80, batch_norm_decay=0.9, leaky_relu=0.1):
+    def __init__(self, num_classes=80,
+                 batch_norm_decay=0.9, leaky_relu=0.1, anchors_path='./data/yolo_anchors.txt'):
 
-        self._ANCHORS = [[10 ,13], [16 , 30], [33 , 23],
-                         [30 ,61], [62 , 45], [59 ,119],
-                         [116,90], [156,198], [373,326]]
+        # self._ANCHORS = [[10 ,13], [16 , 30], [33 , 23],
+                         # [30 ,61], [62 , 45], [59 ,119],
+                         # [116,90], [156,198], [373,326]]
+        self._ANCHORS = utils.get_anchors(anchors_path)
         self._BATCH_NORM_DECAY = batch_norm_decay
         self._LEAKY_RELU = leaky_relu
         self._NUM_CLASSES = num_classes
@@ -95,7 +97,7 @@ class yolov3(object):
 
     def get_boxes_confs_scores(self, feature_map, anchors):
 
-        num_anchors = len(anchors)
+        num_anchors = len(anchors) # num_anchors=3
         grid_size = tf.shape(feature_map)[1:3]
 
         stride = (self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1])

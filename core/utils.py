@@ -23,9 +23,8 @@ def gpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
 
     Arguments:
             boxes  -- tensor of shape [1, 10647, 4] # 10647 boxes
-            confs -- tensor of shape [1, 10647, num_classes], confidence of boxes
-            probs  -- tensor of shape [1, 10647, num_classes], probs of classes
-            max_boxes -- integer, maximum number of predicted boxes you'd like, default is 20
+            scores -- tensor of shape [1, 10647, num_classes], scores of boxes
+            classes -- the return value of function `read_coco_names`
     Note:Applies Non-max suppression (NMS) to set of boxes. Prunes away boxes that have high
     intersection-over-union (IOU) overlap with previously selected boxes.
 
@@ -114,7 +113,6 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
 
     boxes = boxes.reshape(-1, 4)
     scores = scores.reshape(-1, num_classes)
-
     # Picked bounding boxes
     picked_boxes, picked_score, picked_label = [], [], []
 
@@ -138,10 +136,36 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
     return boxes, score, label
 
 
-def draw_boxes(boxes, scores, labels, image, classes,
+def resize_image_correct_bbox(image, bboxes, input_shape):
+    """
+    Parameters:
+    -----------
+    :param image: the type of `PIL.JpegImagePlugin.JpegImageFile`
+    :param input_shape: the shape of input image to the yolov3 network, [416, 416]
+    :param bboxes: numpy.ndarray of shape [N,4], N: the number of boxes in one image
+                                                 4: x1, y1, x2, y2
+
+    Returns:
+    ----------
+    image: the type of `PIL.JpegImagePlugin.JpegImageFile`
+    bboxes: numpy.ndarray of shape [N,4], N: the number of boxes in one image
+    """
+    image_size = image.size
+    # resize image to the input shape
+    image = image.resize(tuple(input_shape))
+    # correct bbox
+    bboxes[:,0] = bboxes[:,0] * input_shape[0] / image_size[0]
+    bboxes[:,1] = bboxes[:,1] * input_shape[1] / image_size[1]
+    bboxes[:,2] = bboxes[:,2] * input_shape[0] / image_size[0]
+    bboxes[:,3] = bboxes[:,3] * input_shape[1] / image_size[1]
+
+    return image, bboxes
+
+
+def draw_boxes(image, boxes, scores, labels, classes,
                detection_size=[416,416],font='./data/font/FiraMono-Medium.otf', show=True):
     """
-    :param boxes, shape of [num, 4]
+    :param boxes, shape of  [num, 4]
     :param scores, shape of [num, ]
     :param labels, shape of [num, ]
     :param image,
@@ -208,6 +232,7 @@ def read_pb_return_tensors(graph, pb_file, return_elements):
 
     return input_tensor, output_tensors
 
+
 def load_weights(var_list, weights_file):
     """
     Loads and converts pre-trained weights.
@@ -268,6 +293,107 @@ def load_weights(var_list, weights_file):
 
 
 
+def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_classes):
+    """
+    Preprocess true boxes to training input format
+    Parameters:
+    -----------
+    :param true_boxes: numpy.ndarray of shape [N, T, 4]
+                        N: the number of images,
+                        T: the number of boxes in each image.
+                        4: coordinate => x_min, y_min, x_max, y_max
+    :param true_labels: class id
+    :param input_shape: the shape of input image to the yolov3 network, [416, 416]
+    :param anchors: array, shape=[9,2], 9: the number of anchors, 2: width, height
+    :param num_classes: integer, for coco dataset, it is 80
+    Returns:
+    ----------
+    y_true: list(3 array), shape like yolo_outputs, [N,, 13, 13, 3, 85]
+    """
+
+    input_shape = np.array(input_shape, dtype=np.int32)
+    num_images = true_boxes.shape[0]
+    num_layers = len(anchors) // 3
+    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
+    grid_sizes = [input_shape//32, input_shape//16, input_shape//8]
+
+    boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) / 2
+    boxes_hw =  true_boxes[..., 2:4] - true_boxes[..., 0:2]
+
+    true_boxes[..., 0:2] = boxes_xy/input_shape[::-1]
+    true_boxes[..., 2:4] = boxes_hw/input_shape[::-1]
+
+    y_true_13 = np.zeros(shape=[num_images, grid_sizes[0][0], grid_sizes[0][1], 3, 5+num_classes], dtype=np.float64)
+    y_true_26 = np.zeros(shape=[num_images, grid_sizes[1][0], grid_sizes[1][1], 3, 5+num_classes], dtype=np.float64)
+    y_true_52 = np.zeros(shape=[num_images, grid_sizes[2][0], grid_sizes[2][1], 3, 5+num_classes], dtype=np.float64)
+    y_true = [y_true_13, y_true_26, y_true_52]
+
+    anchors = np.expand_dims(anchors, 0)
+    anchors_max =  anchors / 2.
+    anchors_min = -anchors_max
+    valid_mask = boxes_hw[..., 0] > 0
+
+    for b in range(num_images): # for each image, do:
+        # Discard zero rows.
+        wh = boxes_hw[b, valid_mask[b]]
+        if len(wh) == 0: continue
+        # set the center of all boxes as the origin of their coordinates
+        # and correct their coordinates
+        wh = np.expand_dims(wh, -2)
+        boxes_max = wh / 2.
+        boxes_min = -boxes_max
+
+        intersect_mins = np.maximum(boxes_min, anchors_min)
+        intersect_maxs = np.minimum(boxes_max, anchors_max)
+        intersect_wh = np.maximum(intersect_maxs - intersect_mins, 0.)
+        intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+        box_area = wh[..., 0] * wh[..., 1]
+        anchor_area = anchors[..., 0] * anchors[..., 1]
+        iou = intersect_area / (box_area + anchor_area - intersect_area)
+        # Find best anchor for each true box
+        best_anchor = np.argmax(iou, axis=-1)
+
+        for t, n in enumerate(best_anchor):
+            for l in range(num_layers):
+                if n not in anchor_mask[l]: continue
+                i = np.floor(true_boxes[b,t,1]*grid_sizes[l][0]).astype('int32')
+                j = np.floor(true_boxes[b,t,0]*grid_sizes[l][1]).astype('int32')
+                k = anchor_mask[l].index(n)
+                c = true_labels[b,t].astype('int32')
+                y_true[l][b, i, j, k, 0:4] = true_boxes[b,t, 0:4]
+                y_true[l][b, i, j, k,   4] = 1
+                y_true[l][b, i, j, k, 5+c] = 1
+
+    return y_true
 
 
+
+def read_image_box_from_text(text_path):
+    """
+    :param text_path
+    :returns : {image_path:(bboxes, labels)}
+                bboxes -> [N,4],(x1, y1, x2, y2)
+                labels -> [N,]
+    """
+    data = {}
+    with open(text_path,'r') as f:
+        for line in f.readlines():
+            example = line.split(' ')
+            image_path = example[0]
+            boxes_num = len(example[1:]) // 5
+            bboxes = np.zeros([boxes_num, 4], dtype=np.float64)
+            labels = np.zeros([boxes_num, ], dtype=np.int32)
+            for i in range(boxes_num):
+                labels[i] = example[1+i*5]
+                bboxes[i] = example[2+i*5:6+i*5]
+            data[image_path] = bboxes, labels
+        return data
+
+
+def get_anchors(anchors_path):
+    '''loads the anchors from a file'''
+    with open(anchors_path) as f:
+        anchors = f.readline()
+    anchors = [float(x) for x in anchors.split(',')]
+    return np.array(anchors).reshape(-1, 2)
 

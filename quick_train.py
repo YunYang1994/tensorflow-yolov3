@@ -12,28 +12,26 @@
 #================================================================
 
 
-from PIL import Image
 import numpy as np
+from PIL import Image
 from core import utils
 
 classes = utils.read_coco_names('./data/coco.names')
+num_classes = len(classes)
+input_shape = [416, 416]
+dataset = utils.read_image_box_from_text('./data/train_data/quick_train_data.txt')
+anchors = utils.get_anchors('./data/yolo_anchors.txt')
 
-data = open('./data/train_data/quick_train_data.txt', 'r').readlines()
+for image_path in dataset.keys():
+    image = Image.open(image_path)
+    true_boxes, true_labels = dataset[image_path]
+    image, true_boxes = utils.resize_image_correct_bbox(image, true_boxes, input_shape)
+    scores = np.ones(len(true_boxes))
+    # utils.draw_boxes(image, boxes, scores, labels, classes)
+    true_boxes = np.expand_dims(true_boxes, 0)
+    true_labels = np.expand_dims(true_labels, 0)
+    result = utils.preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_classes)
+    break
 
-example = data[5].split(' ')
 
-image_path = example[0]
-boxes_num = len(example[1:]) // 5
 
-bboxes = np.zeros([boxes_num, 4], dtype=np.float64)
-labels = np.zeros([boxes_num,  ], dtype=np.int32)
-
-for i in range(boxes_num):
-    labels[i] = example[1+i*5]
-    bboxes[i] = [float(x) for x in example[2+i*5:6+i*5]]
-
-scores = np.array([1]*boxes_num)
-
-image = Image.open(image_path)
-
-utils.draw_boxes(bboxes, scores, labels, image, classes, image.size)

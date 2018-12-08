@@ -35,7 +35,7 @@ with tf.Session(graph=gpu_nms_graph) as sess:
         start = time.time()
         boxes, scores, labels = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
         print("=> nms on gpu the number of boxes= %d  time=%.2f ms" %(len(boxes), 1000*(time.time()-start)))
-    image = utils.draw_boxes(boxes, scores, labels, img, classes, SIZE, show=True)
+    image = utils.draw_boxes(img, boxes, scores, labels, classes, SIZE, show=True)
 # nms on CPU
 input_tensor, output_tensors = utils.read_pb_return_tensors(cpu_nms_graph, "./checkpoint/yolov3_cpu_nms.pb",
                                            ["Placeholder:0", "concat_9:0", "mul_9:0"])
@@ -45,7 +45,7 @@ with tf.Session(graph=cpu_nms_graph) as sess:
         boxes, scores = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
         boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes, score_thresh=0.2, iou_thresh=0.3)
         print("=> nms on cpu the number of boxes= %d  time=%.2f ms" %(len(boxes), 1000*(time.time()-start)))
-    image = utils.draw_boxes(boxes, scores, labels, img, classes, SIZE,show=True)
+    image = utils.draw_boxes(img, boxes, scores, labels, classes, SIZE,show=True)
 
 image.save('./docs/images/611_result.jpg')
 

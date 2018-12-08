@@ -41,7 +41,7 @@ with tf.Session() as sess:
 
         boxes, scores = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
         boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes, score_thresh=0.4, iou_thresh=0.5)
-        image = utils.draw_boxes(boxes, scores, labels, image, classes, SIZE, show=False)
+        image = utils.draw_boxes(image, boxes, scores, labels, classes, SIZE, show=False)
 
         curr_time = time.time()
         exec_time = curr_time - prev_time
