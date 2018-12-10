@@ -42,7 +42,7 @@ $ unzip train2017.zip
 $ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 $ unzip annotations_trainval2017.zip
 ```
-Then you are supposed to extract some useful information such ad bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
+Then you are supposed to extract some useful information such as bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
 ```
 $ python data/extract_coco.py --dataset_info_path ./data/train_data/train2017.txt
 ```
