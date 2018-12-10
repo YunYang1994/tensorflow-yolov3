@@ -31,7 +31,7 @@ $ python video_demo.py # if use camera, set video_path = 0
 ## part 3. Train for your own dataset
 ### 3.1 quick train
 ```
-$ python quick_train.py  # still working
+$ python quick_train.py  # continue to work
 ```
 ### 3.2 train coco dataset
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/`
