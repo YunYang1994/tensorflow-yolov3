@@ -22,9 +22,6 @@ num_classes = len(classes)
 input_shape = [416, 416]
 dataset = utils.read_image_box_from_text('./data/train_data/quick_train_data.txt')
 anchors = utils.get_anchors('./data/yolo_anchors.txt')
-# self._ANCHORS = [[10 ,13], [16 , 30], [33 , 23],
-                    # [30 ,61], [62 , 45], [59 ,119],
-                    # [116,90], [156,198], [373,326]]
 
 inputs = tf.placeholder(tf.float32, shape=[1, 416, 416, 3])
 y_true_13 = tf.placeholder(tf.float32, shape=[1,13,13,3,85])
@@ -37,6 +34,7 @@ with tf.variable_scope('yolov3'):
     load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), "./checkpoint/yolov3.weights")
     sess.run(load_ops)
     loss = model.compute_loss(feature_maps, [y_true_13, y_true_26, y_true_52])
+
 optimizer = tf.train.GradientDescentOptimizer(0.001)
 train_op = optimizer.minimize(loss)
 sess.run(tf.global_variables_initializer())
