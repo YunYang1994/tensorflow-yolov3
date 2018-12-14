@@ -309,6 +309,8 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     Returns:
     ----------
     y_true: list(3 array), shape like yolo_outputs, [N,, 13, 13, 3, 85]
+                           13:cell szie, 3:number of anchors
+                           85: box_centers, box_sizes, confidence, probability
     """
 
     input_shape = np.array(input_shape, dtype=np.int32)
@@ -317,25 +319,25 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
     grid_sizes = [input_shape//32, input_shape//16, input_shape//8]
 
-    boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) / 2
-    boxes_hw =  true_boxes[..., 2:4] - true_boxes[..., 0:2]
+    box_centers = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) / 2 # the center of box
+    box_sizes =  true_boxes[..., 2:4] - true_boxes[..., 0:2] # the height and width of box
 
-    true_boxes[..., 0:2] = boxes_xy/input_shape[::-1]
-    true_boxes[..., 2:4] = boxes_hw/input_shape[::-1]
+    true_boxes[..., 0:2] = box_centers
+    true_boxes[..., 2:4] = box_sizes
 
-    y_true_13 = np.zeros(shape=[num_images, grid_sizes[0][0], grid_sizes[0][1], 3, 5+num_classes], dtype=np.float64)
-    y_true_26 = np.zeros(shape=[num_images, grid_sizes[1][0], grid_sizes[1][1], 3, 5+num_classes], dtype=np.float64)
-    y_true_52 = np.zeros(shape=[num_images, grid_sizes[2][0], grid_sizes[2][1], 3, 5+num_classes], dtype=np.float64)
+    y_true_13 = np.zeros(shape=[num_images, grid_sizes[0][0], grid_sizes[0][1], 3, 5+num_classes], dtype=np.float32)
+    y_true_26 = np.zeros(shape=[num_images, grid_sizes[1][0], grid_sizes[1][1], 3, 5+num_classes], dtype=np.float32)
+    y_true_52 = np.zeros(shape=[num_images, grid_sizes[2][0], grid_sizes[2][1], 3, 5+num_classes], dtype=np.float32)
+
     y_true = [y_true_13, y_true_26, y_true_52]
-
     anchors = np.expand_dims(anchors, 0)
     anchors_max =  anchors / 2.
     anchors_min = -anchors_max
-    valid_mask = boxes_hw[..., 0] > 0
+    valid_mask = box_sizes[..., 0] > 0
 
     for b in range(num_images): # for each image, do:
         # Discard zero rows.
-        wh = boxes_hw[b, valid_mask[b]]
+        wh = box_sizes[b, valid_mask[b]]
         if len(wh) == 0: continue
         # set the center of all boxes as the origin of their coordinates
         # and correct their coordinates
@@ -356,8 +358,8 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
         for t, n in enumerate(best_anchor):
             for l in range(num_layers):
                 if n not in anchor_mask[l]: continue
-                i = np.floor(true_boxes[b,t,1]*grid_sizes[l][0]).astype('int32')
-                j = np.floor(true_boxes[b,t,0]*grid_sizes[l][1]).astype('int32')
+                i = np.floor(true_boxes[b,t,1]/input_shape[::-1]*grid_sizes[l][0]).astype('int32')
+                j = np.floor(true_boxes[b,t,0]/input_shape[::-1]*grid_sizes[l][1]).astype('int32')
                 k = anchor_mask[l].index(n)
                 c = true_labels[b,t].astype('int32')
                 y_true[l][b, i, j, k, 0:4] = true_boxes[b,t, 0:4]
@@ -394,6 +396,6 @@ def get_anchors(anchors_path):
     '''loads the anchors from a file'''
     with open(anchors_path) as f:
         anchors = f.readline()
-    anchors = [float(x) for x in anchors.split(',')]
-    return np.array(anchors).reshape(-1, 2)
+    anchors = np.array(anchors.split(','), dtype=np.float32)
+    return anchors.reshape(-1, 2)
 
