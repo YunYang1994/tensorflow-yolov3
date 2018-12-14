@@ -11,6 +11,7 @@
 #
 #================================================================
 
+import numpy as np
 import tensorflow as tf
 from core import common, utils
 slim = tf.contrib.slim
@@ -265,12 +266,18 @@ class yolov3(object):
 
     def loss_layer(self, feature_map_i, y_true, anchors):
 
+        NO_OBJECT_SCALE  = 1.0
+        OBJECT_SCALE     = 5.0
+        COORD_SCALE      = 1.0
+        CLASS_SCALE      = 1.0
+        CLASS_WEIGHTS    = np.ones(self._NUM_CLASSES, dtype='float32')
+
         grid_size = tf.shape(feature_map_i)[1:3]
         stride = [self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1]]
         stride = tf.cast(stride, dtype=tf.float32)
 
         pred_result = self.get_boxes_confs_scores(feature_map_i, anchors)
-        xy_offset,  pred_box, pred_confs, pred_probs = pred_result
+        xy_offset,  pred_box, pred_box_conf, pred_box_class = pred_result
 
         true_box_xy = y_true[...,:2] # absolute coordinate
         true_box_wh = y_true[...,2:4] # absolute size
@@ -279,33 +286,32 @@ class yolov3(object):
         pred_box_wh = pred_box[...,2:4]# absolute size
 
         # caculate iou between true boxes and pred boxes
-        true_box_area = true_box_wh[..., 0] * true_box_wh[..., 1]
-        pred_box_area = pred_box_wh[..., 0] * pred_box_wh[..., 1]
-
         intersect_xy1 = tf.maximum(true_box_xy - true_box_wh / 2.0,
                                    pred_box_xy - pred_box_xy / 2.0)
-
         intersect_xy2 = tf.maximum(true_box_xy + true_box_wh / 2.0,
                                    pred_box_xy + pred_box_wh / 2.0)
         intersect_wh = tf.maximum(intersect_xy2 - intersect_xy1, 0.)
         intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
-        iou = intersect_area / (true_box_area + pred_box_area - intersect_area)
-        # iou = tf.expand_dims(iou, axis=-1)
-        print("iou", iou)
-        # Best IOUs for each location.
-        # max_iou = tf.reduce_max(iou, axis=-1, keep_dims=True)
-        # match_indice = tf.equal(iou, max_iou)
 
-        object_mask = y_true[...,4:5]
-        coord_scale, noobject_scale = 1.0, 1.0
+        true_area = true_box_wh[..., 0] * true_box_wh[..., 1]
+        pred_area = pred_box_wh[..., 0] * pred_box_wh[..., 1]
 
+        union_area = true_area + pred_area - intersect_area
+        iou_scores = tf.truediv(intersect_area, union_area)
+        iou_scores = tf.expand_dims(iou_scores, axis=-1)
+
+        true_box_conf = iou_scores * y_true[...,4]
+        best_ious = tf.reduce_max(iou_scores, axis=-1)
+
+        conf_mask = tf.to_float(best_ious < 0.6) * (1 - y_true[..., 4:5]) * NO_OBJECT_SCALE
+        # penalize the confidence of the boxes, which are reponsible for corresponding ground truth box
+        conf_mask = conf_mask + y_true[..., 4] * OBJECT_SCALE
+
+        ### adjust x and y => relative position to the containing cell
         true_box_xy = true_box_xy / stride  - xy_offset
         pred_box_xy = pred_box_xy / stride  - xy_offset
 
-        # select whose boxes with max value of iou to
-        print("====>", true_box_xy)
-
-
+        ### adjust w and h => relative size to the containing cell
         true_box_wh_logit = true_box_wh / (anchors * stride)
         pred_box_wh_logit = pred_box_wh / (anchors * stride)
 
@@ -317,35 +323,32 @@ class yolov3(object):
         true_box_wh = tf.log(true_box_wh_logit)
         pred_box_wh = tf.log(pred_box_wh_logit)
 
+        ### adjust class probabilities
+        true_box_class = tf.argmax(y_true[..., 5:], -1)
 
-        object_logits = tf.nn.sigmoid_cross_entropy_with_logits(
-                                            labels=y_true[..., 4:5],logits=pred_confs)
+        ### class mask: simply the position of the ground truth boxes (the predictors)
+        class_mask = y_true[..., 4] * tf.gather(CLASS_WEIGHTS, true_box_class) * CLASS_SCALE
 
-        class_logits = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true[...,5:],
-                                                               logits=pred_probs)
+        coord_mask = y_true[..., 4:5] * COORD_SCALE
 
+        nb_coord_box = tf.reduce_sum(tf.to_float(coord_mask > 0.0))
+        nb_conf_box  = tf.reduce_sum(tf.to_float(conf_mask  > 0.0))
+        nb_class_box = tf.reduce_sum(tf.to_float(class_mask > 0.0))
 
-        xy_loss = tf.reduce_mean(tf.reduce_sum(
-                      object_mask*tf.square(true_box_xy-pred_box_xy), axis=[1,2,3,4]))
+        loss_xy    = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
+        loss_wh    = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
+        loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
+        loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
+        loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-        wh_loss = tf.reduce_mean(tf.reduce_sum(
-                      object_mask*tf.square(true_box_wh-pred_box_wh), axis=[1,2,3,4]))
+        loss = loss_xy + loss_wh + loss_conf + loss_class
 
-        object_loss = tf.reduce_mean(tf.reduce_sum(object_mask*object_logits,axis=[1,2,3,4]))
+        # loss = tf.Print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
+        # loss = tf.Print(loss, [loss_wh], message='Loss WH \t', summarize=1000)
+        # loss = tf.Print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
+        # loss = tf.Print(loss, [loss_class], message='Loss Class \t', summarize=1000)
+        # loss = tf.Print(loss, [loss], message='Total Loss \t', summarize=1000)
 
-        noobject_loss = tf.reduce_mean(tf.reduce_sum((1-object_mask)*object_logits, axis=[1,2,3,4]))
-
-        class_loss = tf.reduce_mean(tf.reduce_sum(object_mask*class_logits, axis=[1,2,3,4]))
-
-        # return xy_loss
-
-        return coord_scale*(xy_loss+wh_loss) + object_loss + noobject_scale*noobject_loss + class_loss
-
-
-
-
-
-
-
+        return loss
 
 

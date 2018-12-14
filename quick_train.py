@@ -31,8 +31,8 @@ y_true_52 = tf.placeholder(tf.float32, shape=[1,52,52,3,85])
 model = yolov3.yolov3(80)
 with tf.variable_scope('yolov3'):
     feature_maps = model.forward(inputs, is_training=True)
-    load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), "./checkpoint/yolov3.weights")
-    sess.run(load_ops)
+    # load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), "./checkpoint/yolov3.weights")
+    # sess.run(load_ops)
     loss = model.compute_loss(feature_maps, [y_true_13, y_true_26, y_true_52])
 
 optimizer = tf.train.GradientDescentOptimizer(0.001)
