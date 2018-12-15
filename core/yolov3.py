@@ -101,7 +101,7 @@ class yolov3(object):
         num_anchors = len(anchors) # num_anchors=3
         grid_size = tf.shape(feature_map)[1:3]
 
-        stride = (self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1])
+        stride = tf.cast(self.img_size // grid_size, tf.float32)
         anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
 
         feature_map = tf.reshape(feature_map, [-1, grid_size[0], grid_size[1], num_anchors, 5 + self._NUM_CLASSES])
@@ -273,8 +273,8 @@ class yolov3(object):
         CLASS_WEIGHTS    = np.ones(self._NUM_CLASSES, dtype='float32')
 
         grid_size = tf.shape(feature_map_i)[1:3]
-        stride = [self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1]]
-        stride = tf.cast(stride, dtype=tf.float32)
+        # stride = [self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1]]
+        stride = tf.cast(self.img_size//grid_size, dtype=tf.float32)
 
         pred_result = self.get_boxes_confs_scores(feature_map_i, anchors)
         xy_offset,  pred_box, pred_box_conf, pred_box_class = pred_result
@@ -300,12 +300,12 @@ class yolov3(object):
         iou_scores = tf.truediv(intersect_area, union_area)
         iou_scores = tf.expand_dims(iou_scores, axis=-1)
 
-        true_box_conf = iou_scores * y_true[...,4]
-        best_ious = tf.reduce_max(iou_scores, axis=-1)
+        true_box_conf = iou_scores * y_true[...,4:5]
+        # best_ious = tf.reduce_max(iou_scores, axis=-1)
 
-        conf_mask = tf.to_float(best_ious < 0.6) * (1 - y_true[..., 4:5]) * NO_OBJECT_SCALE
+        conf_mask = tf.to_float(iou_scores < 0.6) * (1 - y_true[..., 4:5]) * NO_OBJECT_SCALE
         # penalize the confidence of the boxes, which are reponsible for corresponding ground truth box
-        conf_mask = conf_mask + y_true[..., 4] * OBJECT_SCALE
+        conf_mask = conf_mask + y_true[..., 4:5] * OBJECT_SCALE
 
         ### adjust x and y => relative position to the containing cell
         true_box_xy = true_box_xy / stride  - xy_offset
@@ -334,6 +334,9 @@ class yolov3(object):
         nb_coord_box = tf.reduce_sum(tf.to_float(coord_mask > 0.0))
         nb_conf_box  = tf.reduce_sum(tf.to_float(conf_mask  > 0.0))
         nb_class_box = tf.reduce_sum(tf.to_float(class_mask > 0.0))
+        print("nb_conf_box", nb_conf_box)
+        print("conf_mask,", conf_mask)
+        print("true_box_conf", true_box_conf)
 
         loss_xy    = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
         loss_wh    = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
@@ -343,12 +346,12 @@ class yolov3(object):
 
         loss = loss_xy + loss_wh + loss_conf + loss_class
 
-        # loss = tf.Print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
-        # loss = tf.Print(loss, [loss_wh], message='Loss WH \t', summarize=1000)
-        # loss = tf.Print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
-        # loss = tf.Print(loss, [loss_class], message='Loss Class \t', summarize=1000)
-        # loss = tf.Print(loss, [loss], message='Total Loss \t', summarize=1000)
+        loss = tf.Print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
+        loss = tf.Print(loss, [loss_wh], message='Loss WH \t', summarize=1000)
+        loss = tf.Print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
+        loss = tf.Print(loss, [loss_class], message='Loss Class \t', summarize=1000)
+        loss = tf.Print(loss, [loss], message='Total Loss \t', summarize=1000)
 
-        return loss
+        return loss_xy
 
 
