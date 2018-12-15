@@ -35,7 +35,7 @@ with tf.variable_scope('yolov3'):
     sess.run(load_ops)
     loss = model.compute_loss(feature_maps, [y_true_13, y_true_26, y_true_52])
 
-optimizer = tf.train.GradientDescentOptimizer(0.001)
+optimizer = tf.train.AdamOptimizer(0.001)
 train_op = optimizer.minimize(loss)
 sess.run(tf.global_variables_initializer())
 
@@ -55,7 +55,7 @@ for image_path in dataset.keys():
                                     y_true_13:y_true[0],
                                     y_true_26:y_true[1],
                                     y_true_52:y_true[2],})
-    print(result)
+    # print(result)
 
 
 

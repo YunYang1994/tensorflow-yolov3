@@ -11,7 +11,6 @@
 #
 #================================================================
 
-import numpy as np
 import tensorflow as tf
 from core import common, utils
 slim = tf.contrib.slim
@@ -270,7 +269,6 @@ class yolov3(object):
         OBJECT_SCALE     = 5.0
         COORD_SCALE      = 1.0
         CLASS_SCALE      = 1.0
-        CLASS_WEIGHTS    = np.ones(self._NUM_CLASSES, dtype='float32')
 
         grid_size = tf.shape(feature_map_i)[1:3]
         # stride = [self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1]]
@@ -278,6 +276,7 @@ class yolov3(object):
 
         pred_result = self.get_boxes_confs_scores(feature_map_i, anchors)
         xy_offset,  pred_box, pred_box_conf, pred_box_class = pred_result
+        # print(pred_box_class)
 
         true_box_xy = y_true[...,:2] # absolute coordinate
         true_box_wh = y_true[...,2:4] # absolute size
@@ -300,7 +299,8 @@ class yolov3(object):
         iou_scores = tf.truediv(intersect_area, union_area)
         iou_scores = tf.expand_dims(iou_scores, axis=-1)
 
-        true_box_conf = iou_scores * y_true[...,4:5]
+        # true_box_conf = iou_scores * y_true[...,4:5]
+        true_box_conf = y_true[...,4:5]
         # best_ious = tf.reduce_max(iou_scores, axis=-1)
 
         conf_mask = tf.to_float(iou_scores < 0.6) * (1 - y_true[..., 4:5]) * NO_OBJECT_SCALE
@@ -324,34 +324,35 @@ class yolov3(object):
         pred_box_wh = tf.log(pred_box_wh_logit)
 
         ### adjust class probabilities
-        true_box_class = tf.argmax(y_true[..., 5:], -1)
-
+        class_mask = y_true[..., 4:5] * CLASS_SCALE
         ### class mask: simply the position of the ground truth boxes (the predictors)
-        class_mask = y_true[..., 4] * tf.gather(CLASS_WEIGHTS, true_box_class) * CLASS_SCALE
-
         coord_mask = y_true[..., 4:5] * COORD_SCALE
 
         nb_coord_box = tf.reduce_sum(tf.to_float(coord_mask > 0.0))
         nb_conf_box  = tf.reduce_sum(tf.to_float(conf_mask  > 0.0))
         nb_class_box = tf.reduce_sum(tf.to_float(class_mask > 0.0))
-        print("nb_conf_box", nb_conf_box)
-        print("conf_mask,", conf_mask)
-        print("true_box_conf", true_box_conf)
+        # print("nb_conf_box", nb_conf_box)
+        # print("conf_mask,", conf_mask)
+        # print("true_box_conf", true_box_conf)
 
-        loss_xy    = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
-        loss_wh    = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
-        loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
-        loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
+        loss_coord = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
+        loss_sizes = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
+        loss_confs = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
+        loss_class = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true[...,5:], logits=pred_box_class)
+        # loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_true[...,5:], axis=-1),
+                                                                    # logits=tf.argmax(pred_box_class, axis=-1))
         loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-        loss = loss_xy + loss_wh + loss_conf + loss_class
+        # loss = loss_coord + loss_sizes + loss_confs + loss_class
+        # loss = loss_xy + loss_wh + loss_conf
+        loss = loss_coord
 
-        loss = tf.Print(loss, [loss_xy], message='Loss XY \t', summarize=1000)
-        loss = tf.Print(loss, [loss_wh], message='Loss WH \t', summarize=1000)
-        loss = tf.Print(loss, [loss_conf], message='Loss Conf \t', summarize=1000)
-        loss = tf.Print(loss, [loss_class], message='Loss Class \t', summarize=1000)
-        loss = tf.Print(loss, [loss], message='Total Loss \t', summarize=1000)
+        loss = tf.Print(loss, [loss_coord], message='LOSS COORD\t', summarize=1000)
+        loss = tf.Print(loss, [loss_sizes], message='LOSS SIZES\t', summarize=1000)
+        loss = tf.Print(loss, [loss_confs], message='LOSS CONFS\t', summarize=1000)
+        loss = tf.Print(loss, [loss_class], message='Loss CLASS\t', summarize=1000)
+        loss = tf.Print(loss, [loss],       message='LOSS TOTAL\t', summarize=1000)
 
-        return loss_xy
+        return loss
 
 
