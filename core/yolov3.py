@@ -98,7 +98,7 @@ class yolov3(object):
     def get_boxes_confs_scores(self, feature_map, anchors):
 
         num_anchors = len(anchors) # num_anchors=3
-        grid_size = feature_map.get_shape().as_list()[1:3]
+        grid_size = tf.shape(feature_map)[1:3]
 
         stride = (self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1])
         anchors = [(a[0] / stride[0], a[1] / stride[1]) for a in anchors]
@@ -161,7 +161,7 @@ class yolov3(object):
         :return:
         """
         # it will be needed later on
-        self.img_size = inputs.get_shape().as_list()[1:3]
+        self.img_size = tf.shape(inputs)[1:3]
         # set batch norm params
         batch_norm_params = {
             'decay': self._BATCH_NORM_DECAY,
