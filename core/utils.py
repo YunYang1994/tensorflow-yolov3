@@ -383,8 +383,8 @@ def read_image_box_from_text(text_path):
             example = line.split(' ')
             image_path = example[0]
             boxes_num = len(example[1:]) // 5
-            bboxes = np.zeros([boxes_num, 4], dtype=np.float64)
-            labels = np.zeros([boxes_num, ], dtype=np.int32)
+            bboxes = np.zeros([boxes_num, 4], dtype=np.float32)
+            labels = np.zeros([boxes_num, ], dtype=np.int64)
             for i in range(boxes_num):
                 labels[i] = example[1+i*5]
                 bboxes[i] = example[2+i*5:6+i*5]

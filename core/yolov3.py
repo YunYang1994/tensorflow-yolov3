@@ -287,7 +287,7 @@ class yolov3(object):
         # caculate iou between true boxes and pred boxes
         intersect_xy1 = tf.maximum(true_box_xy - true_box_wh / 2.0,
                                    pred_box_xy - pred_box_xy / 2.0)
-        intersect_xy2 = tf.maximum(true_box_xy + true_box_wh / 2.0,
+        intersect_xy2 = tf.minimum(true_box_xy + true_box_wh / 2.0,
                                    pred_box_xy + pred_box_wh / 2.0)
         intersect_wh = tf.maximum(intersect_xy2 - intersect_xy1, 0.)
         intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
