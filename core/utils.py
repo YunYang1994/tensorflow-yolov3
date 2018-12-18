@@ -163,7 +163,7 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thre
 
 def resize_image_correct_bbox(image, bboxes, input_shape):
 
-    image_size = tf.to_float(tf.shape(image)[1:3])
+    image_size = tf.to_float(tf.shape(image)[1:3])[::-1]
     image = tf.image.resize_images(image, size=input_shape)
 
     # correct bbox
@@ -412,4 +412,47 @@ def get_anchors(anchors_path):
         anchors = f.readline()
     anchors = np.array(anchors.split(','), dtype=np.float32)
     return anchors.reshape(-1, 2)
+
+
+
+def parser(serialized_example):
+    features = tf.parse_single_example(
+        serialized_example,
+        features = {
+            'image' : tf.FixedLenFeature([], dtype = tf.string),
+            'bboxes': tf.FixedLenFeature([], dtype = tf.string),
+            'labels': tf.VarLenFeature(dtype = tf.int64),
+        }
+    )
+
+    image = tf.image.decode_jpeg(features['image'], channels = 3)
+    image = tf.image.convert_image_dtype(image, tf.uint8)
+
+    bboxes = tf.decode_raw(features['bboxes'], tf.float32)
+    bboxes = tf.reshape(bboxes, shape=[-1,4])
+
+    labels = features['labels'].values
+    return image, bboxes, labels
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

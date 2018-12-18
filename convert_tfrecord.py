@@ -11,7 +11,6 @@
 #
 #================================================================
 
-import os
 import sys
 import argparse
 import tensorflow as tf
@@ -20,7 +19,7 @@ from core import utils
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_txt", default='./data/train_data/quick_train_data.txt')
-    parser.add_argument("--tfrecord_path", default='./data/train_data/')
+    parser.add_argument("--tfrecord_path_prefix", default='./data/train_data/tfrecords/quick_train_data')
     parser.add_argument("--num_tfrecords", default=3, type=int)
     flags = parser.parse_args()
 
@@ -32,7 +31,7 @@ def main(argv):
 
     n = 0
     while n <= flags.num_tfrecords:
-        tfrecord_file = os.path.join(flags.tfrecord_path,"train_%04d.tfrecords" % n)
+        tfrecord_file = flags.tfrecord_path_prefix+"%04d.tfrecords" % n
         with tf.python_io.TFRecordWriter(tfrecord_file) as record_writer:
             st = n*per_tfrecord_images
             en = (n+1)*per_tfrecord_images if n < flags.num_tfrecords else len(image_paths)
