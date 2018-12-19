@@ -249,18 +249,28 @@ class yolov3(object):
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
         return boxes, confs, probs
 
-    def compute_loss(self, feature_maps, boxes_true):
+    def compute_loss(self, y_pred, y_true):
         """
         Note: compute the loss
-        Arguments: feature_maps, list -> [feature_map_1, feature_map_2, feature_map_3]
+        Arguments: y_pred, list -> [feature_map_1, feature_map_2, feature_map_3]
                                         the shape of [None, 13, 13, 3*85]. etc
         """
+        loss_coord, loss_sizes, loss_confs, loss_class = 0., 0., 0., 0.
         _ANCHORS = [self._ANCHORS[6:9], self._ANCHORS[3:6], self._ANCHORS[0:3]]
-        loss = 0.
-        for i, feature_map in enumerate(feature_maps):
-            loss += self.loss_layer(feature_map, boxes_true[i], _ANCHORS[i])
 
-        return loss
+        for i, feature_map in enumerate(y_pred):
+            loss = self.loss_layer(y_pred[i], y_true[i], _ANCHORS[i])
+            loss_coord += loss[0]
+            loss_sizes += loss[1]
+            loss_confs += loss[2]
+            loss_class += loss[3]
+
+        loss = tf.Print(loss, [loss_coord], message='loss coord:\t', summarize=1000)
+        loss = tf.Print(loss, [loss_sizes], message='loss sizes:\t', summarize=1000)
+        loss = tf.Print(loss, [loss_confs], message='loss confs:\t', summarize=1000)
+        loss = tf.Print(loss, [loss_class], message='loss class:\t', summarize=1000)
+
+        return [loss_coord, loss_sizes, loss_confs, loss_class]
 
 
     def loss_layer(self, feature_map_i, y_true, anchors):
@@ -343,16 +353,5 @@ class yolov3(object):
                                                                     # logits=tf.argmax(pred_box_class, axis=-1))
         loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-        # loss = loss_coord + loss_sizes + loss_confs + loss_class
-        # loss = loss_xy + loss_wh + loss_conf
-        loss = loss_coord
-
-        loss = tf.Print(loss, [loss_coord], message='LOSS COORD\t', summarize=1000)
-        loss = tf.Print(loss, [loss_sizes], message='LOSS SIZES\t', summarize=1000)
-        loss = tf.Print(loss, [loss_confs], message='LOSS CONFS\t', summarize=1000)
-        loss = tf.Print(loss, [loss_class], message='Loss CLASS\t', summarize=1000)
-        loss = tf.Print(loss, [loss],       message='LOSS TOTAL\t', summarize=1000)
-
-        return loss
-
+        return loss_coord, loss_sizes, loss_confs, loss_class
 

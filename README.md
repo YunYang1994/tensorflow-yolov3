@@ -29,9 +29,10 @@ $ python video_demo.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train for your own dataset
-### 3.1 quick train (continue to work)
+### 3.1 quick train
+The purpose of this demo is to give you a glimpse of yolov3 training process. 
 ```
-$ python quick_train.py  # continue to work
+$ python quick_train.py 
 ```
 ### 3.2 train coco dataset (continue to work)
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/`
