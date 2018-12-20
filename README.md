@@ -30,9 +30,10 @@ $ python video_demo.py # if use camera, set video_path = 0
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train for your own dataset
 ### 3.1 quick train
-The purpose of this demo is to give you a glimpse of yolov3 training process. 
+The purpose of this demo is to give you a glimpse of yolov3 training process. `python core/convert_tfrecord.py` to convert your imageset in to tfrecords
 ```
-$ python quick_train.py 
+$ python core/convert_tfrecord.py --dataset ./data/train_data/quick_train_data.txt  --tfrecord_path_prefix ./data/train_data/tfrecords/quick_train_data
+$ python quick_train.py  # start training
 ```
 ### 3.2 train coco dataset (continue to work)
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/`
@@ -45,7 +46,7 @@ $ unzip annotations_trainval2017.zip
 ```
 Then you are supposed to extract some useful information such as bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
 ```
-$ python data/extract_coco.py --dataset_info_path ./data/train_data/train2017.txt
+$ python core/extract_coco.py --dataset_info_path ./data/train_data/train2017.txt
 ```
 As a result, you will get  `./data/train_data/train2017.txt`.  Here is an example row for one image:<br>
 ```

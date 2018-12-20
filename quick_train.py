@@ -36,16 +36,12 @@ y_true = tf.py_func(utils.preprocess_true_boxes,
                     inp=[true_boxes, true_labels, [INPUT_SIZE, INPUT_SIZE], anchors, num_classes],
                     Tout = [tf.float32, tf.float32, tf.float32])
 
-y_true_13 = tf.placeholder(tf.float32, shape=[1,13,13,3,85])
-y_true_26 = tf.placeholder(tf.float32, shape=[1,26,26,3,85])
-y_true_52 = tf.placeholder(tf.float32, shape=[1,52,52,3,85])
-
 model = yolov3.yolov3(num_classes)
 with tf.variable_scope('yolov3'):
-    feature_maps = model.forward(images, is_training=True)
+    y_pred = model.forward(images, is_training=True)
     # load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), "./checkpoint/yolov3.weights")
     # sess.run(load_ops)
-    loss_items = model.compute_loss(feature_maps, y_true)
+    loss_items = model.compute_loss(y_pred, y_true)
     loss = sum(loss_items)
 
 optimizer = tf.train.AdamOptimizer(LR)

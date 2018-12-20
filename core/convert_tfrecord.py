@@ -12,9 +12,9 @@
 #================================================================
 
 import sys
+import utils
 import argparse
 import tensorflow as tf
-from core import utils
 
 def main(argv):
     parser = argparse.ArgumentParser()

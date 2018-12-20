@@ -241,10 +241,10 @@ class yolov3(object):
         probs = tf.concat(probs_list, axis=1)
 
         center_x, center_y, height, width = tf.split(boxes, [1,1,1,1], axis=-1)
-        x0 = center_x - height  / 2
-        y0 = center_y - width / 2
-        x1 = center_x + height  / 2
-        y1 = center_y + width / 2
+        x0 = center_x - height / 2
+        y0 = center_y - width  / 2
+        x1 = center_x + height / 2
+        y1 = center_y + width  / 2
 
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
         return boxes, confs, probs
@@ -258,7 +258,7 @@ class yolov3(object):
         loss_coord, loss_sizes, loss_confs, loss_class = 0., 0., 0., 0.
         _ANCHORS = [self._ANCHORS[6:9], self._ANCHORS[3:6], self._ANCHORS[0:3]]
 
-        for i, feature_map in enumerate(y_pred):
+        for i in range(len( y_pred )):
             loss = self.loss_layer(y_pred[i], y_true[i], _ANCHORS[i])
             loss_coord += loss[0]
             loss_sizes += loss[1]
@@ -281,7 +281,6 @@ class yolov3(object):
         CLASS_SCALE      = 1.0
 
         grid_size = tf.shape(feature_map_i)[1:3]
-        # stride = [self.img_size[0] // grid_size[0], self.img_size[1] // grid_size[1]]
         stride = tf.cast(self.img_size//grid_size, dtype=tf.float32)
 
         pred_result = self.get_boxes_confs_scores(feature_map_i, anchors)
@@ -341,9 +340,6 @@ class yolov3(object):
         nb_coord_box = tf.reduce_sum(tf.to_float(coord_mask > 0.0))
         nb_conf_box  = tf.reduce_sum(tf.to_float(conf_mask  > 0.0))
         nb_class_box = tf.reduce_sum(tf.to_float(class_mask > 0.0))
-        # print("nb_conf_box", nb_conf_box)
-        # print("conf_mask,", conf_mask)
-        # print("true_box_conf", true_box_conf)
 
         loss_coord = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
         loss_sizes = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
