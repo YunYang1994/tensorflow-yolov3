@@ -30,7 +30,7 @@ $ python video_demo.py # if use camera, set video_path = 0
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train for your own dataset
 ### 3.1 quick train
-The purpose of this demo is to give you a glimpse of yolov3 training process. `python core/convert_tfrecord.py` to convert your imageset in to tfrecords
+The purpose of this demo is to give you a glimpse of yolov3 training process. `python core/convert_tfrecord.py` to convert your imageset into tfrecords
 ```
 $ python core/convert_tfrecord.py --dataset ./data/train_data/quick_train_data.txt  --tfrecord_path_prefix ./data/train_data/tfrecords/quick_train_data
 $ python quick_train.py  # start training
