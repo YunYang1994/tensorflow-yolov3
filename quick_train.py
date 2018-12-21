@@ -25,16 +25,13 @@ num_classes = len(classes)
 file_pattern = "./data/train_data/tfrecords/quick_train_data*.tfrecords"
 anchors = utils.get_anchors('./data/yolo_anchors.txt')
 
+
 dataset = tf.data.TFRecordDataset(filenames = tf.gfile.Glob(file_pattern))
-dataset = dataset.map(utils.parser, num_parallel_calls = 10)
+dataset = dataset.map(utils.parser(anchors, num_classes).parser_example, num_parallel_calls = 10)
 dataset = dataset.repeat().batch(BATCH_SIZE).prefetch(BATCH_SIZE)
 iterator = dataset.make_one_shot_iterator()
-images, true_boxes, true_labels = iterator.get_next()
-images, true_boxes = utils.resize_image_correct_bbox(images, true_boxes, [INPUT_SIZE, INPUT_SIZE])
-
-y_true = tf.py_func(utils.preprocess_true_boxes,
-                    inp=[true_boxes, true_labels, [INPUT_SIZE, INPUT_SIZE], anchors, num_classes],
-                    Tout = [tf.float32, tf.float32, tf.float32])
+example = iterator.get_next()
+images, *y_true = example
 
 model = yolov3.yolov3(num_classes)
 with tf.variable_scope('yolov3'):
