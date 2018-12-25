@@ -258,22 +258,32 @@ class yolov3(object):
         Arguments: y_pred, list -> [feature_map_1, feature_map_2, feature_map_3]
                                         the shape of [None, 13, 13, 3*85]. etc
         """
-        loss_coord, loss_sizes, loss_confs, loss_class = 0., 0., 0., 0.
+        loss_coord, loss_sizes, loss_confs, loss_class      = 0., 0., 0., 0.
+        nb_true_box, nb_pred_box_true, nb_pred_box, sum_iou = 0., 0., 0., 0.
+
         _ANCHORS = [self._ANCHORS[6:9], self._ANCHORS[3:6], self._ANCHORS[0:3]]
 
         for i in range(len( y_pred )):
-            loss = self.loss_layer(y_pred[i], y_true[i], _ANCHORS[i])
-            loss_coord += loss[0]
-            loss_sizes += loss[1]
-            loss_confs += loss[2]
-            loss_class += loss[3]
+            result = self.loss_layer(y_pred[i], y_true[i], _ANCHORS[i])
+            nb_true_box      += result[0]
+            nb_pred_box      += result[1]
+            nb_pred_box_true += result[2]
+            sum_iou          += result[3]
+            loss_coord       += result[4]
+            loss_sizes       += result[5]
+            loss_confs       += result[6]
+            loss_class       += result[7]
 
-        loss = tf.Print(loss, [loss_coord], message='loss coord:\t', summarize=1000)
-        loss = tf.Print(loss, [loss_sizes], message='loss sizes:\t', summarize=1000)
-        loss = tf.Print(loss, [loss_confs], message='loss confs:\t', summarize=1000)
-        loss = tf.Print(loss, [loss_class], message='loss class:\t', summarize=1000)
+        # result = tf.Print(result, [loss_coord], message='loss coord:\t', summarize=1000)
+        # result = tf.Print(result, [loss_sizes], message='loss sizes:\t', summarize=1000)
+        # result = tf.Print(result, [loss_confs], message='loss confs:\t', summarize=1000)
+        # result = tf.Print(result, [loss_class], message='loss class:\t', summarize=1000)
+        pre_50  = nb_pred_box_true / (nb_pred_box + 1e-6)
+        rec_50  = nb_pred_box      / (nb_true_box + 1e-6)
+        avg_iou = sum_iou          / (nb_true_box + 1e-6)
+        total_loss = loss_coord + loss_sizes + loss_confs + loss_class
 
-        return [loss_coord, loss_sizes, loss_confs, loss_class]
+        return [pre_50, rec_50, avg_iou, total_loss, loss_coord, loss_sizes, loss_confs, loss_class]
 
 
     def loss_layer(self, feature_map_i, y_true, anchors):
@@ -288,7 +298,6 @@ class yolov3(object):
 
         pred_result = self._reorg_layer(feature_map_i, anchors)
         xy_offset,  pred_box, pred_box_conf_logits, pred_box_class_logits = pred_result
-        pred_box_conf = tf.sigmoid(pred_box_conf_logits)
 
         true_box_xy = y_true[...,:2] # absolute coordinate
         true_box_wh = y_true[...,2:4] # absolute size
@@ -311,14 +320,8 @@ class yolov3(object):
         iou_scores = tf.truediv(intersect_area, union_area)
         iou_scores = tf.expand_dims(iou_scores, axis=-1)
 
-        # true_box_conf = iou_scores * y_true[...,4:5]
         true_box_conf = y_true[...,4:5]
-        # best_ious = tf.reduce_max(iou_scores, axis=-1)
-
-        conf_mask = tf.to_float(iou_scores < 0.6) * (1 - y_true[..., 4:5]) * NO_OBJECT_SCALE
-        # penalize the confidence of the boxes, which are reponsible for corresponding ground truth box
-        conf_mask = conf_mask + y_true[..., 4:5] * OBJECT_SCALE
-
+        pred_box_conf = tf.sigmoid(pred_box_conf_logits)
         ### adjust x and y => relative position to the containing cell
         true_box_xy = true_box_xy / stride  - xy_offset
         pred_box_xy = pred_box_xy / stride  - xy_offset
@@ -335,14 +338,25 @@ class yolov3(object):
         true_box_wh = tf.log(true_box_wh_logit)
         pred_box_wh = tf.log(pred_box_wh_logit)
 
+        object_mask = y_true[..., 4:5]
+        conf_mask = tf.to_float(iou_scores < 0.6) * (1 - object_mask) * NO_OBJECT_SCALE
+        # penalize the confidence of the boxes, which are reponsible for corresponding ground truth box
+        conf_mask = conf_mask + object_mask * OBJECT_SCALE
+
         ### adjust class probabilities
-        class_mask = y_true[..., 4:5] * CLASS_SCALE
+        class_mask = object_mask * CLASS_SCALE
         ### class mask: simply the position of the ground truth boxes (the predictors)
-        coord_mask = y_true[..., 4:5] * COORD_SCALE
+        coord_mask = object_mask * COORD_SCALE
+        detect_mask = tf.to_float(pred_box_conf >= 0.5)*tf.to_float(iou_scores >= 0.5)
 
         nb_coord_box = tf.reduce_sum(tf.to_float(coord_mask > 0.0))
         nb_conf_box  = tf.reduce_sum(tf.to_float(conf_mask  > 0.0))
         nb_class_box = tf.reduce_sum(tf.to_float(class_mask > 0.0))
+
+        nb_true_box  = tf.reduce_sum(object_mask)
+        nb_pred_box  = tf.reduce_sum(detect_mask)
+        nb_pred_box_true = tf.reduce_sum(detect_mask*object_mask)
+        sum_iou      = tf.reduce_sum(iou_scores*object_mask)
 
         loss_coord = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
         loss_sizes = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
@@ -350,5 +364,5 @@ class yolov3(object):
         loss_class = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true[...,5:], logits=pred_box_class_logits)
         loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
-        return loss_coord, loss_sizes, loss_confs, loss_class
+        return  nb_true_box, nb_pred_box, nb_pred_box_true, sum_iou, loss_coord, loss_sizes, loss_confs, loss_class
 
