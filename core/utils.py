@@ -418,7 +418,7 @@ class parser(object):
         # resize_image_correct_bbox
         image, true_boxes = resize_image_correct_bbox(image, true_boxes,
                                                       input_shape=self.input_shape)
-
+        image = image / 255
         y_true_13, y_true_26, y_true_52 = tf.py_func(preprocess_true_boxes,
                             inp=[true_boxes, true_labels, self.input_shape, self.anchors, self.num_classes],
                             Tout = [tf.float32, tf.float32, tf.float32])
