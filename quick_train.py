@@ -48,7 +48,7 @@ sess.run(tf.global_variables_initializer())
 for epoch in range(EPOCHS):
     result = sess.run([train_op, loss] + loss_items)
     _, total_loss, loss_coord, loss_sizes, loss_confs, loss_class = result
-    print("=> EPOCH:%4d, total_loss:%9.4f\tloss_coord:%9.4f\tloss_sizes:%9.4f\tloss_confs:%9.4f\tloss_class:%9.4f\t"
+    print("=> EPOCH:%4d\ttotal_loss:%9.4f\tloss_coord:%9.4f\tloss_sizes:%9.4f\tloss_confs:%9.4f\tloss_class:%9.4f\t"
           %(epoch, total_loss, loss_coord, loss_sizes, loss_confs, loss_class))
 
 

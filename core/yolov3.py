@@ -95,7 +95,7 @@ class yolov3(object):
                                 biases_initializer=tf.zeros_initializer())
         return feature_map
 
-    def get_boxes_confs_scores(self, feature_map, anchors):
+    def _reorg_layer(self, feature_map, anchors):
 
         num_anchors = len(anchors) # num_anchors=3
         grid_size = tf.shape(feature_map)[1:3]
@@ -105,15 +105,14 @@ class yolov3(object):
 
         feature_map = tf.reshape(feature_map, [-1, grid_size[0], grid_size[1], num_anchors, 5 + self._NUM_CLASSES])
 
-        box_centers, box_sizes, confs, probs = tf.split(
+        box_centers, box_sizes, conf_logits, prob_logits = tf.split(
             feature_map, [2, 2, 1, self._NUM_CLASSES], axis=-1)
 
         box_centers = tf.nn.sigmoid(box_centers)
-        confs = tf.nn.sigmoid(confs)
-        probs = tf.nn.sigmoid(probs)
 
         grid_x = tf.range(grid_size[0], dtype=tf.int32)
         grid_y = tf.range(grid_size[1], dtype=tf.int32)
+
         a, b = tf.meshgrid(grid_x, grid_y)
         x_offset = tf.reshape(a, (-1, 1))
         y_offset = tf.reshape(b, (-1, 1))
@@ -128,7 +127,7 @@ class yolov3(object):
         box_sizes = box_sizes * stride
 
         boxes = tf.concat([box_centers, box_sizes], axis=-1)
-        return x_y_offset, boxes, confs, probs
+        return x_y_offset, boxes, conf_logits, prob_logits
 
     @staticmethod
     def _upsample(inputs, out_shape):
@@ -227,11 +226,15 @@ class yolov3(object):
                                (feature_map_2, self._ANCHORS[3:6]),
                                (feature_map_3, self._ANCHORS[0:3]),]
 
-        results = [self.get_boxes_confs_scores(feature_map, anchors) for (feature_map, anchors) in feature_map_anchors]
+        results = [self._reorg_layer(feature_map, anchors) for (feature_map, anchors) in feature_map_anchors]
         boxes_list, confs_list, probs_list = [], [], []
 
         for result in results:
-            boxes, confs, probs = self._reshape(*result)
+            boxes, conf_logits, prob_logits = self._reshape(*result)
+
+            confs = tf.sigmoid(conf_logits)
+            probs = tf.sigmoid(prob_logits)
+
             boxes_list.append(boxes)
             confs_list.append(confs)
             probs_list.append(probs)
@@ -283,9 +286,9 @@ class yolov3(object):
         grid_size = tf.shape(feature_map_i)[1:3]
         stride = tf.cast(self.img_size//grid_size, dtype=tf.float32)
 
-        pred_result = self.get_boxes_confs_scores(feature_map_i, anchors)
-        xy_offset,  pred_box, pred_box_conf, pred_box_class = pred_result
-        # print(pred_box_class)
+        pred_result = self._reorg_layer(feature_map_i, anchors)
+        xy_offset,  pred_box, pred_box_conf_logits, pred_box_class_logits = pred_result
+        pred_box_conf = tf.sigmoid(pred_box_conf_logits)
 
         true_box_xy = y_true[...,:2] # absolute coordinate
         true_box_wh = y_true[...,2:4] # absolute size
@@ -344,9 +347,7 @@ class yolov3(object):
         loss_coord = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
         loss_sizes = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
         loss_confs = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
-        loss_class = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true[...,5:], logits=pred_box_class)
-        # loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_true[...,5:], axis=-1),
-                                                                    # logits=tf.argmax(pred_box_class, axis=-1))
+        loss_class = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true[...,5:], logits=pred_box_class_logits)
         loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
 
         return loss_coord, loss_sizes, loss_confs, loss_class
