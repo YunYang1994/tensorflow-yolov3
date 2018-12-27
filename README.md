@@ -54,7 +54,7 @@ As a result, you will get  `./data/train_data/COCO/train2017.txt`.  Here is an e
 /home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 16 55.38 132.63 519.84 380.4
 # image_path, category_id, x_min, y_min, x_max, y_max, category_id, x_min, y_min, ...
 ```
-In this step, you will convert image dataset into some `.tfrecord`  which are a kind of recommended file format for Tensorflow to store your data as  binary file. Then train it
+In this step, you will convert image dataset into some `.tfrecord`  which are a kind of recommended file format for Tensorflow to store your data as  binary file. Finally, you can train it now!
 ```
 $ python core/convert_tfrecord.py --dataset ./data/train_data/COCO/train2017.txt  --tfrecord_path_prefix ./data/train_data/COCO/tfrecords/coco --num_tfrecords 100
 $ python train.py
