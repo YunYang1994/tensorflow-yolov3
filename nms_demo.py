@@ -48,6 +48,5 @@ with tf.Session(graph=cpu_nms_graph) as sess:
         print("=> nms on cpu the number of boxes= %d  time=%.2f ms" %(len(boxes), 1000*(time.time()-start)))
     image = utils.draw_boxes(img, boxes, scores, labels, classes, SIZE, show=True)
 
-image.save('./docs/images/611_result.jpg')
 
 
