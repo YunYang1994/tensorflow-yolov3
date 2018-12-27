@@ -7,7 +7,7 @@ Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This reposito
 - [x] Basic working demo
 - [x] Non max suppression on the both `GPU` and `CPU` is supported
 - [x] Training pipeline
-
+- [x] Compute COCO mAP
 ## part 2. Quick start
 1. Clone this file
 ```bashrc
@@ -58,6 +58,14 @@ In this step, you will convert image dataset into some `.tfrecord`  which are a 
 ```
 $ python core/convert_tfrecord.py --dataset ./data/train_data/COCO/train2017.txt  --tfrecord_path_prefix ./data/train_data/COCO/tfrecords/coco --num_tfrecords 100
 $ python train.py
+```
+### 3.2 evaluate coco dataset (continue to work)
+```
+$ cd data/train_data/COCO
+$ wget http://images.cocodataset.org/zips/test2017.zip
+$ wget http://images.cocodataset.org/annotations/image_info_test2017.zip 
+$ unzip test2017.zip
+$ unzip image_info_test2017.zip
 ```
 
 ## part 4. Why it is so magical ?
