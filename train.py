@@ -16,15 +16,15 @@ import tensorflow as tf
 from core import utils, yolov3
 
 INPUT_SIZE = 416
-BATCH_SIZE = 32
-EPOCHS = 20
+BATCH_SIZE = 12
+EPOCHS = 200000
 LR = 0.001
 SHUFFLE_SIZE = 10000
 
 sess = tf.Session()
 classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
-file_pattern = "/home/yang/test/COCO/tfrecords/coco*.tfrecords"
+file_pattern = "../COCO/tfrecords/coco*.tfrecords"
 anchors = utils.get_anchors('./data/yolo_anchors.txt')
 
 is_training = tf.placeholder(dtype=tf.bool, name="phase_train")
@@ -59,9 +59,9 @@ for epoch in range(EPOCHS):
     run_items = sess.run([train_op, write_op] + result, feed_dict={is_training:True})
     writer_train.add_summary(summary=run_items[1], global_step=epoch)
     writer_train.flush() # Flushes the event file to disk
-    if epoch%10 == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch)
+    if epoch%1000 == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch)
 
-    print("=> EPOCH:%4d\t| prec_50:%.4f\trec_50:%.4f\tavg_iou:%.4f\t | total_loss:%7.4f\tloss_coord:%7.4f"
+    print("=> EPOCH:%10d\t| prec_50:%.4f\trec_50:%.4f\tavg_iou:%.4f\t | total_loss:%7.4f\tloss_coord:%7.4f"
           "\tloss_sizes:%7.4f\tloss_confs:%7.4f\tloss_class:%7.4f" %(epoch, run_items[2], run_items[3],
                         run_items[4], run_items[5], run_items[6], run_items[7], run_items[8], run_items[9]))
 
