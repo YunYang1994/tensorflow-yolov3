@@ -59,7 +59,7 @@ In this step, you will convert image dataset into some `.tfrecord`  which are a 
 $ python core/convert_tfrecord.py --dataset ./data/train_data/COCO/train2017.txt  --tfrecord_path_prefix ./data/train_data/COCO/tfrecords/coco --num_tfrecords 100
 $ python train.py
 ```
-### 3.2 evaluate coco dataset (continue to work)
+### 3.3 evaluate coco dataset (continue to work)
 ```
 $ cd data/train_data/COCO
 $ wget http://images.cocodataset.org/zips/test2017.zip
