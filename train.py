@@ -17,7 +17,7 @@ from core import utils, yolov3
 
 INPUT_SIZE = 416
 BATCH_SIZE = 12
-EPOCHS = 200000
+EPOCHS = 20000000
 LR = 0.001
 SHUFFLE_SIZE = 10000
 
