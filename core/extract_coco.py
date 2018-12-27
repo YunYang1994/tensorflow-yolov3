@@ -20,9 +20,9 @@ from collections import defaultdict
 def main(argv):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--json_path", default='./data/train_data/annotations/instances_train2017.json')
-    parser.add_argument("--image_path", default="./data/train_data/train2017")
-    parser.add_argument("--dataset_info_path", default="./data/train_data/train2017.txt")
+    parser.add_argument("--json_path", default='/home/yang/test/COCO/annotations/instances_train2017.json')
+    parser.add_argument("--image_path", default="/home/yang/test/COCO/train2017")
+    parser.add_argument("--dataset_info_path", default="./data/train_data/COCO/train2017.txt")
     flags = parser.parse_args()
 
     dataset = defaultdict(list)

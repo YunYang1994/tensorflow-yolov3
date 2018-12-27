@@ -19,6 +19,7 @@ from core import utils
 
 
 SIZE = [416, 416]
+EPOCHS = 5
 # SIZE = [608, 608]
 classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
@@ -31,7 +32,7 @@ cpu_nms_graph, gpu_nms_graph = tf.Graph(), tf.Graph()
 input_tensor, output_tensors = utils.read_pb_return_tensors(gpu_nms_graph, "./checkpoint/yolov3_gpu_nms.pb",
                                            ["Placeholder:0", "concat_10:0", "concat_11:0", "concat_12:0"])
 with tf.Session(graph=gpu_nms_graph) as sess:
-    for i in range(5):
+    for i in range(EPOCHS):
         start = time.time()
         boxes, scores, labels = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
         print("=> nms on gpu the number of boxes= %d  time=%.2f ms" %(len(boxes), 1000*(time.time()-start)))
@@ -40,7 +41,7 @@ with tf.Session(graph=gpu_nms_graph) as sess:
 input_tensor, output_tensors = utils.read_pb_return_tensors(cpu_nms_graph, "./checkpoint/yolov3_cpu_nms.pb",
                                            ["Placeholder:0", "concat_9:0", "mul_9:0"])
 with tf.Session(graph=cpu_nms_graph) as sess:
-    for i in range(5):
+    for i in range(EPOCHS):
         start = time.time()
         boxes, scores = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
         boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes, score_thresh=0.2, iou_thresh=0.3)

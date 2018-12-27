@@ -80,7 +80,7 @@ def main(argv):
         inputs = tf.placeholder(tf.float32, [1, SIZE, SIZE, 3]) # placeholder for detector inputs
 
         with tf.variable_scope('yolov3'):
-            feature_map = model.forward(inputs)
+            feature_map = model.forward(inputs, is_training=False)
 
         # boxes, scores = utils.get_boxes_scores(detections)
         boxes, confs, probs = model.predict(feature_map)
