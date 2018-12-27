@@ -32,13 +32,13 @@ $ python video_demo.py # if use camera, set video_path = 0
 ### 3.1 quick train
 The purpose of this demo is to give you a glimpse of yolov3 training process. `python core/convert_tfrecord.py` to convert your imageset into tfrecords
 ```
-$ python core/convert_tfrecord.py --dataset ./data/train_data/quick_train_data.txt  --tfrecord_path_prefix ./data/train_data/tfrecords/quick_train_data
+$ python core/convert_tfrecord.py --dataset /data/train_data/quick_train_data/quick_train_data.txt  --tfrecord_path_prefix /data/train_data/quick_train_data/tfrecords/quick_train_data
 $ python quick_train.py  # start training
 ```
-### 3.2 train coco dataset (continue to work)
-Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/`
+### 3.2 train coco dataset
+Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/train_data/COCO`
 ```bashrc
-$ cd data/train_data
+$ cd data/train_data/COCO
 $ wget http://images.cocodataset.org/zips/train2017.zip
 $ unzip train2017.zip
 $ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
@@ -46,15 +46,19 @@ $ unzip annotations_trainval2017.zip
 ```
 Then you are supposed to extract some useful information such as bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
 ```
-$ python core/extract_coco.py --dataset_info_path ./data/train_data/train2017.txt
+$ python core/extract_coco.py --dataset_info_path ./data/train_data/COCO/train2017.txt
 ```
-As a result, you will get  `./data/train_data/train2017.txt`.  Here is an example row for one image:<br>
+As a result, you will get  `./data/train_data/COCO/train2017.txt`.  Here is an example row for one image:<br>
 ```
 /home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 20 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94
 /home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 16 55.38 132.63 519.84 380.4
 # image_path, category_id, x_min, y_min, x_max, y_max, category_id, x_min, y_min, ...
 ```
-
+In this step, you will convert image dataset into some `.tfrecord`  which are a kind of recommended file format for Tensorflow to store your data as  binary file. Then train it
+```
+$ python core/convert_tfrecord.py --dataset ./data/train_data/COCO/train2017.txt  --tfrecord_path_prefix ./data/train_data/COCO/tfrecords/coco --num_tfrecords 100
+$ python train.py
+```
 
 ## part 4. Why it is so magical ?
 YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Although we has successfully run these codes, we must understand how YOLO works. 
