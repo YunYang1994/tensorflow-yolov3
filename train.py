@@ -16,11 +16,10 @@ import tensorflow as tf
 from core import utils, yolov3
 
 INPUT_SIZE = 416
-BATCH_SIZE = 1
+BATCH_SIZE = 32
 EPOCHS = 20
 LR = 0.001
-# SHUFFLE_SIZE = 10000
-SHUFFLE_SIZE = 10
+SHUFFLE_SIZE = 10000
 
 sess = tf.Session()
 classes = utils.read_coco_names('./data/coco.names')
