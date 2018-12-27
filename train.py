@@ -28,7 +28,7 @@ num_classes = len(classes)
 file_pattern = "/home/yang/test/COCO/tfrecords/coco*.tfrecords"
 anchors = utils.get_anchors('./data/yolo_anchors.txt')
 
-phase_placeholder = tf.placeholder(dtype=tf.bool, name="phase_train")
+is_training = tf.placeholder(dtype=tf.bool, name="phase_train")
 dataset = tf.data.TFRecordDataset(filenames = tf.gfile.Glob(file_pattern))
 dataset = dataset.map(utils.parser(anchors, num_classes).parser_example, num_parallel_calls = 10)
 dataset = dataset.repeat().shuffle(SHUFFLE_SIZE).batch(BATCH_SIZE).prefetch(BATCH_SIZE)
@@ -38,7 +38,7 @@ example = iterator.get_next()
 images, *y_true = example
 model = yolov3.yolov3(num_classes)
 with tf.variable_scope('yolov3'):
-    y_pred = model.forward(images, is_training=phase_placeholder)
+    y_pred = model.forward(images, is_training=is_training)
     result = model.compute_loss(y_pred, y_true)
 
 optimizer = tf.train.AdamOptimizer(LR)
@@ -57,7 +57,7 @@ write_op = tf.summary.merge_all()
 writer_train = tf.summary.FileWriter("./data/log/train", graph=sess.graph)
 
 for epoch in range(EPOCHS):
-    run_items = sess.run([train_op, write_op] + result, feed_dict={phase_placeholder:True})
+    run_items = sess.run([train_op, write_op] + result, feed_dict={is_training:True})
     writer_train.add_summary(summary=run_items[1], global_step=epoch)
     writer_train.flush() # Flushes the event file to disk
     if epoch%10 == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch)
