@@ -18,8 +18,8 @@ import tensorflow as tf
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_txt", default='./data/train_data/quick_train_data.txt')
-    parser.add_argument("--tfrecord_path_prefix", default='./data/train_data/tfrecords/quick_train_data')
+    parser.add_argument("--dataset_txt", default='./data/train_data/quick_train_data/quick_train_data.txt')
+    parser.add_argument("--tfrecord_path_prefix", default='./data/train_data/quick_train_data/tfrecords/quick_train_data')
     parser.add_argument("--num_tfrecords", default=3, type=int)
     flags = parser.parse_args()
 
