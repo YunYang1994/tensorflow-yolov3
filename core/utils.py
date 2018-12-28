@@ -14,6 +14,7 @@
 import colorsys
 import numpy as np
 import tensorflow as tf
+from collections import Counter
 from PIL import ImageFont, ImageDraw
 
 # Discard all boxes with low scores and high IOU
@@ -447,6 +448,44 @@ class parser(object):
 
         return self.preprocess(image, true_labels, true_boxes)
 
+def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
 
+    num_images = y_true[0].shape[0]
+    true_labels   = {i:0 for i in range(num_classes)} # {class: count}
+    pred_labels   = {i:0 for i in range(num_classes)}
+    true_positive = {i:0 for i in range(num_classes)}
+
+    for i in range(num_images):
+        true_labels_list = []
+        for j in range(3): # three feature maps
+            true_probs_temp = y_true[j][i][...,5:]
+            true_probs_temp = true_probs_temp[true_probs_temp.sum(axis=-1) > 0]
+            true_labels_list += list(np.argmax(true_probs_temp, axis=-1))
+
+        if len(true_labels_list) != 0:
+            print(true_labels_list)
+            for cls, count in Counter(true_labels_list).items(): true_labels[cls] += count
+
+        pred_boxes = y_pred[0][i:i+1]
+        pred_confs = y_pred[1][i:i+1]
+        pred_probs = y_pred[2][i:i+1]
+        pred_labels_list = cpu_nms(pred_boxes, pred_confs*pred_probs, num_classes,
+                                            100, score_thresh, iou_thresh)[2]
+        pred_labels_list = [] if pred_labels_list is None else list(pred_labels_list)
+
+        if len(pred_labels_list) != 0:
+            for cls, count in Counter(pred_labels_list).items(): pred_labels[cls] += count
+
+        for k in range(num_classes):
+            t = true_labels_list.count(k)
+            p = pred_labels_list.count(k)
+            true_positive[k] += p if t >= p else t
+
+    recall    = sum(true_positive.values()) / (sum(true_labels.values()) + 1e-6)
+    precision = sum(true_positive.values()) / (sum(pred_labels.values()) + 1e-6)
+    avg_prec  = [true_positive[i] / (true_labels[i] + 1e-6) for i in range(num_classes)]
+    mAP       = sum(avg_prec) / num_classes
+
+    return recall, precision, mAP
 
 
