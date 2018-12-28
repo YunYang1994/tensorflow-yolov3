@@ -345,6 +345,7 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     anchors_min = -anchors_max
     valid_mask = box_sizes[:, 0] > 0
 
+
     # Discard zero rows.
     wh = box_sizes[valid_mask]
     # set the center of all boxes as the origin of their coordinates
@@ -355,7 +356,7 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
 
     intersect_mins = np.maximum(boxes_min, anchors_min)
     intersect_maxs = np.minimum(boxes_max, anchors_max)
-    intersect_wh = np.maximum(intersect_maxs - intersect_mins, 0.)
+    intersect_wh   = np.maximum(intersect_maxs - intersect_mins, 0.)
     intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
     box_area = wh[..., 0] * wh[..., 1]
 
@@ -448,43 +449,80 @@ class parser(object):
 
         return self.preprocess(image, true_labels, true_boxes)
 
+def bbox_iou(A, B):
+
+    intersect_mins = np.maximum(A[:, 0:2], B[:, 0:2])
+    intersect_maxs = np.minimum(A[:, 2:4], B[:, 2:4])
+    intersect_wh   = np.maximum(intersect_maxs - intersect_mins, 0.)
+    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+
+    A_area = np.prod(A[:, 2:4] - A[:, 0:2], axis=1)
+    B_area = np.prod(B[:, 2:4] - B[:, 0:2], axis=1)
+
+    iou = intersect_area / (A_area + B_area - intersect_area)
+
+    return iou
+
 def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
 
     num_images = y_true[0].shape[0]
-    true_labels   = {i:0 for i in range(num_classes)} # {class: count}
-    pred_labels   = {i:0 for i in range(num_classes)}
-    true_positive = {i:0 for i in range(num_classes)}
+    true_labels_dict   = {i:0 for i in range(num_classes)} # {class: count}
+    pred_labels_dict   = {i:0 for i in range(num_classes)}
+    true_positive_dict = {i:0 for i in range(num_classes)}
 
     for i in range(num_images):
-        true_labels_list = []
+        true_labels_list, true_boxes_list = [], []
         for j in range(3): # three feature maps
-            true_probs_temp = y_true[j][i][...,5:]
-            true_probs_temp = true_probs_temp[true_probs_temp.sum(axis=-1) > 0]
-            true_labels_list += list(np.argmax(true_probs_temp, axis=-1))
+            true_probs_temp = y_true[j][i][...,5: ]
+            true_boxes_temp = y_true[j][i][...,0:4]
+
+            object_mask = true_probs_temp.sum(axis=-1) > 0
+
+            true_probs_temp = true_probs_temp[object_mask]
+            true_boxes_temp = true_boxes_temp[object_mask]
+
+            true_labels_list += np.argmax(true_probs_temp, axis=-1).tolist()
+            true_boxes_list  += true_boxes_temp.tolist()
 
         if len(true_labels_list) != 0:
-            print(true_labels_list)
-            for cls, count in Counter(true_labels_list).items(): true_labels[cls] += count
+            for cls, count in Counter(true_labels_list).items(): true_labels_dict[cls] += count
 
         pred_boxes = y_pred[0][i:i+1]
         pred_confs = y_pred[1][i:i+1]
         pred_probs = y_pred[2][i:i+1]
-        pred_labels_list = cpu_nms(pred_boxes, pred_confs*pred_probs, num_classes,
-                                            100, score_thresh, iou_thresh)[2]
-        pred_labels_list = [] if pred_labels_list is None else list(pred_labels_list)
 
-        if len(pred_labels_list) != 0:
-            for cls, count in Counter(pred_labels_list).items(): pred_labels[cls] += count
+        pred_boxes, pred_confs, pred_labels = cpu_nms(pred_boxes, pred_confs*pred_probs, num_classes,
+                                                      score_thresh=score_thresh, iou_thresh=iou_thresh)
 
-        for k in range(num_classes):
-            t = true_labels_list.count(k)
-            p = pred_labels_list.count(k)
-            true_positive[k] += p if t >= p else t
+        true_boxes = np.array(true_boxes_list)
+        box_centers, box_sizes = true_boxes[:,0:2], true_boxes[:,2:4]
 
-    recall    = sum(true_positive.values()) / (sum(true_labels.values()) + 1e-6)
-    precision = sum(true_positive.values()) / (sum(pred_labels.values()) + 1e-6)
-    avg_prec  = [true_positive[i] / (true_labels[i] + 1e-6) for i in range(num_classes)]
-    mAP       = sum(avg_prec) / num_classes
+        true_boxes[:,0:2] = box_centers - box_sizes / 2.
+        true_boxes[:,2:4] = true_boxes[:,0:2] + box_sizes
+
+        pred_labels_list = [] if pred_labels is None else pred_labels.tolist()
+        if pred_labels_list == []: continue
+
+        detected = []
+        for k in range(len(true_labels_list)):
+            # compute iou between predicted box and ground_truth boxes
+            iou = bbox_iou(true_boxes[k:k+1], pred_boxes)
+            # Extract index of largest overlap
+            m = np.argmax(iou)
+            if iou[m] >= iou_thresh and true_labels_list[k] == pred_labels_list[m] and m not in detected:
+                pred_labels_dict[true_labels_list[k]] += 1
+                detected.append(m)
+        pred_labels_list = [pred_labels_list[m] for m in detected]
+
+        for c in range(num_classes):
+            t = true_labels_list.count(c)
+            p = pred_labels_list.count(c)
+            true_positive_dict[c] += p if t >= p else t
+
+    recall    = sum(true_positive_dict.values()) / (sum(true_labels_dict.values()) + 1e-6)
+    precision = sum(true_positive_dict.values()) / (sum(pred_labels_dict.values()) + 1e-6)
+    avg_prec  = [true_positive_dict[i] / (true_labels_dict[i] + 1e-6) for i in range(num_classes)]
+    mAP       = sum(avg_prec) / (sum([avg_prec[i] != 0 for i in range(num_classes)]) + 1e-6)
 
     return recall, precision, mAP
 
