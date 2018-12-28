@@ -507,8 +507,7 @@ def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
         for k in range(len(true_labels_list)):
             # compute iou between predicted box and ground_truth boxes
             iou = bbox_iou(true_boxes[k:k+1], pred_boxes)
-            # Extract index of largest overlap
-            m = np.argmax(iou)
+            m = np.argmax(iou) # Extract index of largest overlap
             if iou[m] >= iou_thresh and true_labels_list[k] == pred_labels_list[m] and m not in detected:
                 pred_labels_dict[true_labels_list[k]] += 1
                 detected.append(m)
