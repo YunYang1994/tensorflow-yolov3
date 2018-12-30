@@ -60,7 +60,7 @@ load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), weights_path)
 sess.run(load_ops)
 
 for epoch in range(EPOCHS):
-    run_items = sess.run([y_pred, y_true] + loss, feed_dict={is_training:True})
+    run_items = sess.run([y_pred, y_true] + loss, feed_dict={is_training:False})
     rec, prec, mAP = utils.evaluate(run_items[0], run_items[1], num_classes, score_thresh=0.3, iou_thresh=0.5)
 
     print("=> EPOCH: %2d\ttotal_loss:%7.4f\tloss_coord:%7.4f\tloss_sizes:%7.4f\tloss_confs:%7.4f\tloss_class:%7.4f"
