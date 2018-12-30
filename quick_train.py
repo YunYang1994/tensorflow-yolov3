@@ -34,6 +34,7 @@ iterator = dataset.make_one_shot_iterator()
 example = iterator.get_next()
 images, *y_true = example
 model = yolov3.yolov3(num_classes)
+
 with tf.variable_scope('yolov3'):
     y_pred = model.forward(images, is_training=False)
     loss = model.compute_loss(y_pred, y_true)
