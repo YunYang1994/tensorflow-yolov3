@@ -23,7 +23,9 @@ EPOCHS = 5
 # SIZE = [608, 608]
 classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
-img = Image.open('./data/demo_data/611.jpg')
+image_path = "./data/demo_data/car.jpg"
+# image_path = "./data/demo_data/611.jpg"
+img = Image.open(image_path)
 img_resized = np.array(img.resize(size=tuple(SIZE)), dtype=np.float32)
 img_resized = img_resized / 255.
 cpu_nms_graph, gpu_nms_graph = tf.Graph(), tf.Graph()
@@ -44,7 +46,7 @@ with tf.Session(graph=cpu_nms_graph) as sess:
     for i in range(EPOCHS):
         start = time.time()
         boxes, scores = sess.run(output_tensors, feed_dict={input_tensor: np.expand_dims(img_resized, axis=0)})
-        boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes, score_thresh=0.2, iou_thresh=0.3)
+        boxes, scores, labels = utils.cpu_nms(boxes, scores, num_classes, score_thresh=0.5, iou_thresh=0.5)
         print("=> nms on cpu the number of boxes= %d  time=%.2f ms" %(len(boxes), 1000*(time.time()-start)))
     image = utils.draw_boxes(img, boxes, scores, labels, classes, SIZE, show=True)
 
