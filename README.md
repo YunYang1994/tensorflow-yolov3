@@ -18,7 +18,7 @@ $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
 $ cd tensorflow-yolov3
 $ pip install -r ./docs/requirements.txt
 ```
-3. Exporting loaded COCO weights as TF checkpoint(`yolov3.ckpt`) and frozen graph (`yolov3_gpu_nms.pb`)
+3. Exporting loaded COCO weights as TF checkpoint(`yolov3.ckpt`) and frozen graph (`yolov3_gpu_nms.pb`) . If you don't have [yolov3.weights](https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3.weights). Download and put it in the dir `./checkpoint`
 ```bashrc
 $ python convert_weight.py --convert --freeze
 ```
