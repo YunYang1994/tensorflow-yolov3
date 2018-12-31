@@ -54,13 +54,13 @@ class parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "--iou_threshold", "-it", default=0.3, type=float,
+            "--iou_threshold", "-it", default=0.5, type=float,
             help="[default: %(default)s] The iou_threshold for gpu nms",
             metavar="<IT>",
         )
 
         self.add_argument(
-            "--score_threshold", "-st", default=0.2, type=float,
+            "--score_threshold", "-st", default=0.5, type=float,
             help="[default: %(default)s] The score_threshold for gpu nms",
             metavar="<ST>",
         )
@@ -86,8 +86,9 @@ def main(argv):
         boxes, confs, probs = model.predict(feature_map)
         scores = confs * probs
         print("=>", boxes, scores)
-        boxes, scores, labels = utils.gpu_nms(boxes, scores, num_classes, 20,
-                                              flags.score_threshold, flags.iou_threshold)
+        boxes, scores, labels = utils.gpu_nms(boxes, scores, num_classes,
+                                              score_thresh=flags.score_threshold,
+                                              iou_thresh=flags.iou_threshold)
         print("=>", boxes, scores, labels)
         feature_map_1, feature_map_2, feature_map_3 = feature_map
         print("=>", feature_map_1, feature_map_2, feature_map_3)
