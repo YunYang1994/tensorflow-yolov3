@@ -95,7 +95,7 @@ def main(argv):
 
         if flags.convert:
             if not os.path.exists(flags.weights_path):
-                url = 'https://pjreddie.com/media/files/yolov3.weights'
+                url = 'https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3.weights'
                 for i in range(3):
                     time.sleep(1)
                     print("=> %s does not exists ! " %flags.weights_path)
