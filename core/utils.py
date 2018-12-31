@@ -65,7 +65,7 @@ def gpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thre
     return boxes, score, label
 
 
-def py_nms(boxes, scores, max_boxes=20, iou_thresh=0.5):
+def py_nms(boxes, scores, max_boxes=50, iou_thresh=0.5):
     """
     Pure Python NMS baseline.
 
