@@ -18,7 +18,7 @@ from collections import Counter
 from PIL import ImageFont, ImageDraw
 
 # Discard all boxes with low scores and high IOU
-def gpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thresh=0.5):
+def gpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thresh=0.5):
     """
     /*----------------------------------- NMS on gpu ---------------------------------------*/
 
@@ -104,7 +104,7 @@ def py_nms(boxes, scores, max_boxes=20, iou_thresh=0.5):
 
     return keep[:max_boxes]
 
-def cpu_nms(boxes, scores, num_classes, max_boxes=20, score_thresh=0.4, iou_thresh=0.5):
+def cpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thresh=0.5):
     """
     /*----------------------------------- NMS on cpu ---------------------------------------*/
     Arguments:
