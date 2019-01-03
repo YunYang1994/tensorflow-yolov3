@@ -16,10 +16,10 @@ import tensorflow as tf
 from core import utils, yolov3
 
 INPUT_SIZE = 416
-BATCH_SIZE = 1
-EPOCHS = 10
-LR = 0.0001
-SHUFFLE_SIZE = 1
+BATCH_SIZE = 16
+EPOCHS = 5000000
+LR = 0.001
+SHUFFLE_SIZE = 10000
 
 sess = tf.Session()
 classes = utils.read_coco_names('./data/coco.names')
@@ -42,7 +42,7 @@ with tf.variable_scope('yolov3'):
     loss = model.compute_loss(y_pred, y_true)
     y_pred = model.predict(y_pred)
 
-optimizer = tf.train.AdamOptimizer(LR)
+optimizer = tf.train.MomentumOptimizer(LR, momentum=0.9)
 train_op = optimizer.minimize(loss[0])
 saver = tf.train.Saver(max_to_keep=2)
 
