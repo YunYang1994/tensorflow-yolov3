@@ -326,7 +326,7 @@ class yolov3(object):
         pred_box_wh = tf.log(pred_box_wh_logit)
 
         object_mask = y_true[..., 4:5]
-        conf_mask = tf.to_float(iou_scores < 0.6) * (1 - object_mask) * NO_OBJECT_SCALE
+        conf_mask = tf.to_float(iou_scores < 0.3) * (1 - object_mask) * NO_OBJECT_SCALE
         # penalize the confidence of the boxes, which are reponsible for corresponding ground truth box
         conf_mask = conf_mask + object_mask * OBJECT_SCALE
 
