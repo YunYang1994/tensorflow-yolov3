@@ -18,7 +18,7 @@ from core import utils, yolov3
 INPUT_SIZE = 416
 BATCH_SIZE = 16
 EPOCHS = 5000000
-LR = 0.001
+LR = 0.0001
 SHUFFLE_SIZE = 10000
 
 sess = tf.Session()
