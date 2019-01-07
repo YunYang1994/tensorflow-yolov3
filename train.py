@@ -25,7 +25,8 @@ sess = tf.Session()
 # classes = utils.read_coco_names('./data/coco.names')
 num_classes = 20
 # file_pattern = "../COCO/tfrecords/coco*.tfrecords"
-file_pattern = "/home/yang/test/voc/voc_train*.tfrecords"
+# file_pattern = "/home/yang/test/voc/voc_train*.tfrecords"
+file_pattern = "/home/yang/test/kangaroo/tfrecords/kangaroo*.tfrecords"
 # file_pattern = "./data/train_data/quick_train_data/tfrecords/quick_train_data*.tfrecords"
 anchors = utils.get_anchors('./data/yolo_anchors.txt')
 
@@ -73,7 +74,7 @@ load_op = utils.load_weights(var_list=pretrained_weights,
 sess.run(load_op)
 
 
-for epoch in range(4376,EPOCHS):
+for epoch in range(EPOCHS):
     run_items = sess.run([train_op, y_pred, y_true] + loss, feed_dict={is_training:True})
     rec, prec, mAP = utils.evaluate(run_items[1], run_items[2], num_classes)
     _, _, _, summary = sess.run([tf.assign(rec_tensor, rec),
