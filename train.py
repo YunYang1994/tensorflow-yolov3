@@ -16,16 +16,17 @@ import tensorflow as tf
 from core import utils, yolov3
 
 INPUT_SIZE = 416
-BATCH_SIZE = 16
-EPOCHS = 5000000
+BATCH_SIZE = 1
+EPOCHS = 700000
 LR = 0.0001
-SHUFFLE_SIZE = 10000
+SHUFFLE_SIZE = 1
 
 sess = tf.Session()
-classes = utils.read_coco_names('./data/coco.names')
-num_classes = len(classes)
+# classes = utils.read_coco_names('./data/coco.names')
+num_classes = 20
 # file_pattern = "../COCO/tfrecords/coco*.tfrecords"
-file_pattern = "./data/train_data/quick_train_data/tfrecords/quick_train_data*.tfrecords"
+file_pattern = "/home/yang/test/voc/voc_train*.tfrecords"
+# file_pattern = "./data/train_data/quick_train_data/tfrecords/quick_train_data*.tfrecords"
 anchors = utils.get_anchors('./data/yolo_anchors.txt')
 
 is_training = tf.placeholder(dtype=tf.bool, name="phase_train")
@@ -42,8 +43,8 @@ with tf.variable_scope('yolov3'):
     loss = model.compute_loss(y_pred, y_true)
     y_pred = model.predict(y_pred)
 
+
 optimizer = tf.train.MomentumOptimizer(LR, momentum=0.9)
-train_op = optimizer.minimize(loss[0])
 saver = tf.train.Saver(max_to_keep=2)
 
 rec_tensor  = tf.Variable(0.)
@@ -60,10 +61,19 @@ tf.summary.scalar("loss/sizes_loss", loss[2])
 tf.summary.scalar("loss/confs_loss", loss[3])
 tf.summary.scalar("loss/class_loss", loss[4])
 write_op = tf.summary.merge_all()
-writer_train = tf.summary.FileWriter("./data/log/train", graph=sess.graph)
+writer_train = tf.summary.FileWriter("./data/log/train")
+
+update_var = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="yolov3/yolo-v3")
+train_op = optimizer.minimize(loss[0], var_list=update_var) # only update yolo layer
 sess.run(tf.global_variables_initializer())
 
-for epoch in range(EPOCHS):
+pretrained_weights = tf.global_variables(scope="yolov3/darknet-53")
+load_op = utils.load_weights(var_list=pretrained_weights,
+                            weights_file="/home/yang/test/darknet53.conv.74")
+sess.run(load_op)
+
+
+for epoch in range(4376,EPOCHS):
     run_items = sess.run([train_op, y_pred, y_true] + loss, feed_dict={is_training:True})
     rec, prec, mAP = utils.evaluate(run_items[1], run_items[2], num_classes)
     _, _, _, summary = sess.run([tf.assign(rec_tensor, rec),

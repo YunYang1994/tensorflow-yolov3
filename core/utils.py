@@ -264,7 +264,9 @@ def load_weights(var_list, weights_file):
     assign_ops = []
     while i < len(var_list) - 1:
         var1 = var_list[i]
+        print("=> loading ", var1.name)
         var2 = var_list[i + 1]
+        print("=> loading ", var2.name)
         # do something only if we process conv layer
         if 'Conv' in var1.name.split('/')[-2]:
             # check type of next layer
