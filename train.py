@@ -70,7 +70,7 @@ sess.run(tf.global_variables_initializer())
 
 pretrained_weights = tf.global_variables(scope="yolov3/darknet-53")
 load_op = utils.load_weights(var_list=pretrained_weights,
-                            weights_file="/home/yang/test/darknet53.conv.74")
+                            weights_file="../darknet53.conv.74")
 sess.run(load_op)
 
 
