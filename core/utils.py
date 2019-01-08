@@ -370,8 +370,8 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     for t, n in enumerate(best_anchor):
         for l in range(num_layers):
             if n not in anchor_mask[l]: continue
-            i = np.floor(true_boxes[t,1]/input_shape[::-1]*grid_sizes[l][0]).astype('int32')
-            j = np.floor(true_boxes[t,0]/input_shape[::-1]*grid_sizes[l][1]).astype('int32')
+            i = np.floor(true_boxes[t,0]/input_shape[0]*grid_sizes[l][0]).astype('int32')
+            j = np.floor(true_boxes[t,1]/input_shape[1]*grid_sizes[l][1]).astype('int32')
             k = anchor_mask[l].index(n)
             c = true_labels[t].astype('int32')
             y_true[l][i, j, k, 0:4] = true_boxes[t, 0:4]
