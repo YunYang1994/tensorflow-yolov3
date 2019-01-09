@@ -41,7 +41,7 @@ with tf.Session(graph=gpu_nms_graph) as sess:
     image = utils.draw_boxes(img, boxes, scores, labels, classes, SIZE, show=True)
 # nms on CPU
 input_tensor, output_tensors = utils.read_pb_return_tensors(cpu_nms_graph, "./checkpoint/yolov3_cpu_nms.pb",
-                                           ["Placeholder:0", "concat_9:0", "mul_9:0"])
+                                           ["Placeholder:0", "concat_9:0", "mul_6:0"])
 with tf.Session(graph=cpu_nms_graph) as sess:
     for i in range(EPOCHS):
         start = time.time()
