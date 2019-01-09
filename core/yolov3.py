@@ -288,15 +288,19 @@ class yolov3(object):
         pred_result = self._reorg_layer(feature_map_i, anchors)
 
         xy_offset,  pred_boxes, pred_box_conf_logits, pred_box_class_logits = pred_result
-        # (13, 13, 1, 2), (1, 13, 13, 3, 4), (1, 13, 13, 3, 1), (1, 13, 13, 3, 20)
+        # (13, 13, 1, 2), (1, 13, 13, 3, 4), (1, 13, 13, 3, 1), (1, 13, 13, 3, 80)
+        # pred_boxes 前面两个坐标是左上角，后面两个是右下角
 
         """
         Adjust prediction
         """
         pred_box_conf  = tf.nn.sigmoid(pred_box_conf_logits)                                    # adjust confidence
         pred_box_class = tf.argmax(tf.nn.softmax(pred_box_class_logits), -1)                    # adjust class probabilities
-        pred_box_xy = pred_boxes[..., 0:2]                                                      # absolute coordinate
-        pred_box_wh = pred_boxes[..., 2:4]                                                      # absolute size
+        pred_box_xy = (pred_boxes[..., 0:2] + pred_boxes[..., 2:4]) / 2.                        # absolute coordinate
+        pred_box_wh =  pred_boxes[..., 2:4] - pred_boxes[..., 0:2]                               # absolute size
+
+        # 每个cell里都会预测一个boundingbox，y_true里面每个cell里也对应一个
+        # boundingbox，那么怎么计算iou呢?
 
         """
         Adjust ground truth
@@ -306,8 +310,6 @@ class yolov3(object):
         true_box_xy = y_true[..., 0:2]                                                           # absolute coordinate
         true_box_wh = y_true[..., 2:4]                                                           # absolute size
         object_mask = y_true[..., 4:5]
-
-        return pred_box_xy, pred_box_wh, true_box_xy, true_box_wh, object_mask
 
         # initially, drag all objectness of all boxes to 0
         conf_delta  = pred_box_conf - 0
@@ -365,13 +367,12 @@ class yolov3(object):
         true_xy = true_boxes[..., 0:2]  # absolute location
         true_wh = true_boxes[..., 2:4]  # absolute size
 
-        pred_xy = tf.expand_dims(pred_boxes[..., 0:2], axis=4)
-        pred_wh = tf.expand_dims(pred_boxes[..., 2:4], axis=4)
 
         true_mins = true_xy - true_wh / 2.
         true_maxs = true_xy + true_wh / 2.
-        pred_mins = pred_xy - pred_wh / 2.
-        pred_maxs = pred_xy + pred_wh / 2.
+        pred_mins = tf.expand_dims(pred_boxes[..., 0:2], axis=4)
+        pred_maxs = tf.expand_dims(pred_boxes[..., 2:4], axis=4)
+        pred_wh   = pred_maxs - pred_mins
 
         intersect_mins  = tf.maximum(pred_mins, true_mins)
         intersect_maxs  = tf.minimum(pred_maxs, true_maxs)
