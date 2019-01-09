@@ -26,7 +26,7 @@ classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
 input_tensor, output_tensors = utils.read_pb_return_tensors(tf.get_default_graph(),
                                                             "./checkpoint/yolov3_cpu_nms.pb",
-                                                            ["Placeholder:0", "concat_9:0", "mul_9:0"])
+                                                            ["Placeholder:0", "concat_9:0", "mul_6:0"])
 with tf.Session() as sess:
     vid = cv2.VideoCapture(video_path)
     while True:
