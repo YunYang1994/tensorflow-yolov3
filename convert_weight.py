@@ -82,7 +82,6 @@ def main(argv):
         with tf.variable_scope('yolov3'):
             feature_map = model.forward(inputs, is_training=False)
 
-        # boxes, scores = utils.get_boxes_scores(detections)
         boxes, confs, probs = model.predict(feature_map)
         scores = confs * probs
         print("=>", boxes, scores)
@@ -112,7 +111,7 @@ def main(argv):
         if flags.freeze:
             saver.restore(sess, flags.ckpt_file)
             print('=> checkpoint file restored from ', flags.ckpt_file)
-            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', ["concat_9", "mul_9"])
+            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', ["concat_9", "mul_6"])
             utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', ["concat_10", "concat_11", "concat_12"])
             utils.freeze_graph(sess, './checkpoint/yolov3_feature.pb', ["yolov3/yolo-v3/feature_map_1",
                                                                         "yolov3/yolo-v3/feature_map_2",
