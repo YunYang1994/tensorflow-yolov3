@@ -286,7 +286,9 @@ class yolov3(object):
         stride = tf.cast(self.img_size//grid_size, dtype=tf.float32) # [32, 32]
 
         pred_result = self._reorg_layer(feature_map_i, anchors)
+
         xy_offset,  pred_boxes, pred_box_conf_logits, pred_box_class_logits = pred_result
+        # (13, 13, 1, 2), (1, 13, 13, 3, 4), (1, 13, 13, 3, 1), (1, 13, 13, 3, 20)
 
         """
         Adjust prediction
@@ -304,6 +306,9 @@ class yolov3(object):
         true_box_xy = y_true[..., 0:2]                                                           # absolute coordinate
         true_box_wh = y_true[..., 2:4]                                                           # absolute size
         object_mask = y_true[..., 4:5]
+
+        return pred_box_xy, pred_box_wh, true_box_xy, true_box_wh, object_mask
+
         # initially, drag all objectness of all boxes to 0
         conf_delta  = pred_box_conf - 0
 
@@ -327,6 +332,8 @@ class yolov3(object):
         union_area  = pred_area + true_area - intersect_area
         iou_scores  = tf.truediv(intersect_area, union_area)
 
+        return object_mask, intersect_area, iou_scores
+
         iou_scores  = object_mask * tf.expand_dims(iou_scores, 4)
 
         count       = tf.reduce_sum(object_mask)
@@ -346,20 +353,15 @@ class yolov3(object):
             true_boxes_batch = np.zeros([bs, 1, 1, 1, max_box_per_image, 4], dtype=np.float32)
             # print("=>true_boxes_batch", true_boxes_batch.shape)
             for i in range(bs):
-                y_true_per_image = y_true[i]
-                # print("=>y_true_per_image", y_true_per_image.shape)
-                true_boxes_per_image = y_true_per_image[y_true_per_image[..., 4] > 0]
-                true_boxes_per_image = true_boxes_per_image[:, 0:4]
-                if len(true_boxes_per_image) == 0: continue
-                # print("=>true_boxes_per_image", true_boxes_per_image)
-                # print(true_boxes_per_image.shape)
-                true_boxes_per_image = true_boxes_per_image.reshape(-1,4)
-                # print("=>true_boxes_per_image", true_boxes_per_image.shape)
-                true_boxes_batch[i][0][0][0][0:len(true_boxes_per_image)] = true_boxes_per_image
+                y_true_per_layer = y_true[i]
+                true_boxes_per_layer = y_true_per_layer[y_true_per_layer[..., 4] > 0][:, 0:4]
+                if len(true_boxes_per_layer) == 0: continue
+                true_boxes_batch[i][0][0][0][0:len(true_boxes_per_layer)] = true_boxes_per_layer
 
             return true_boxes_batch
 
         true_boxes = tf.py_func(pick_out_gt_box, [y_true], [tf.float32] )[0]
+
         true_xy = true_boxes[..., 0:2]  # absolute location
         true_wh = true_boxes[..., 2:4]  # absolute size
 
@@ -371,8 +373,8 @@ class yolov3(object):
         pred_mins = pred_xy - pred_wh / 2.
         pred_maxs = pred_xy + pred_wh / 2.
 
-        intersect_mins  = tf.maximum(pred_mins,  true_mins)
-        intersect_maxs = tf.minimum(pred_maxs, true_maxs)
+        intersect_mins  = tf.maximum(pred_mins, true_mins)
+        intersect_maxs  = tf.minimum(pred_maxs, true_maxs)
 
         intersect_wh    = tf.maximum(intersect_maxs - intersect_mins, 0.)
         intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
@@ -382,7 +384,6 @@ class yolov3(object):
 
         union_area = pred_area + true_area - intersect_area
         iou_scores  = tf.truediv(intersect_area, union_area)
-
         best_ious   = tf.reduce_max(iou_scores, axis=4)
         conf_delta *= tf.expand_dims(tf.to_float(best_ious < ignore_thresh), 4)
 
@@ -414,10 +415,10 @@ class yolov3(object):
         class_delta = object_mask * \
                       tf.expand_dims(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class_logits), 4) * CLASS_SCALE
 
-        loss_xy    = tf.reduce_sum(tf.square(xy_delta))
-        loss_wh    = tf.reduce_sum(tf.square(wh_delta))
-        loss_conf  = tf.reduce_sum(tf.square(conf_delta))
-        loss_class = tf.reduce_sum(class_delta)
+        loss_xy    = tf.reduce_mean(tf.square(xy_delta))
+        loss_wh    = tf.reduce_mean(tf.square(wh_delta))
+        loss_conf  = tf.reduce_mean(tf.square(conf_delta))
+        loss_class = tf.reduce_mean(class_delta)
 
         return  loss_xy, loss_wh, loss_conf, loss_class, recall50, recall75, avg_iou
 
