@@ -8,6 +8,10 @@ Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This reposito
 - [x] Non max suppression on the both `GPU` and `CPU` is supported
 - [x] Training pipeline
 - [x] Compute COCO mAP
+
+YOLO paper is quick hard to understand, along side that paper. This [tutorial](https://github.com/YunYang1994/tensorflow-yolov2_from_scratch) enables you to understand YOLO Algorithmn. Sorry for my poor English. Only Chinese-edition is supported now !
+
+
 ## part 2. Quick start
 1. Clone this file
 ```bashrc
