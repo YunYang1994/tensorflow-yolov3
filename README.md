@@ -9,7 +9,7 @@ Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This reposito
 - [x] Training pipeline
 - [x] Compute COCO mAP
 
-YOLO paper is quick hard to understand, along side that paper. This [tutorial](https://github.com/YunYang1994/tensorflow-yolov2_from_scratch) enables you to understand YOLO Algorithmn. Sorry for my poor English. Only Chinese-edition is supported now !
+YOLO paper is quick hard to understand, along side that paper. This [tutorial](https://github.com/YunYang1994/tensorflow-yolov2_from_scratch) enables you to have a quick understanding of YOLO Algorithmn.
 
 
 ## part 2. Quick start
