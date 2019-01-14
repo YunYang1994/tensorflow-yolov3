@@ -129,6 +129,8 @@ Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
 [- `Object Detection using YOLOv2 on Pascal VOC2012`](https://fairyonice.github.io/Part_1_Object_Detection_with_Yolo_for_VOC_2014_data_anchor_box_clustering.html)
 
+[-`Understanding YOLO`](https://hackernoon.com/understanding-yolo-f5a74bbc7967)
+
 [- `YOLOv3目标检测有了TensorFlow实现，可用自己的数据来训练`](https://mp.weixin.qq.com/s/cq7g1-4oFTftLbmKcpi_aQ)<br>
 
 [- `学员分享 | 小哥哥和用YOLOv3做目标检测的故事「文末送课」`](https://mp.weixin.qq.com/s/dFiOkUsal62EoME52Iw-uQ)
