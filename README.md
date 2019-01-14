@@ -133,6 +133,8 @@ Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
 [- `学员分享 | 小哥哥和用YOLOv3做目标检测的故事「文末送课」`](https://mp.weixin.qq.com/s/dFiOkUsal62EoME52Iw-uQ)
 
+[-`目标检测|YOLOv2原理与实现(附YOLOv3)`](https://zhuanlan.zhihu.com/p/35325884)
+
 
 
 
