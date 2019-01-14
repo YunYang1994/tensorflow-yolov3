@@ -135,6 +135,8 @@ Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
 [-`目标检测|YOLOv2原理与实现(附YOLOv3)`](https://zhuanlan.zhihu.com/p/35325884)
 
+[-` YOLOv2は、2016年12月25日時点の、速度、精度ともに世界最高のリアルタイム物体検出手法です。`](https://github.com/leetenki/YOLOv2/blob/master/YOLOv2.md)
+
 
 
 
