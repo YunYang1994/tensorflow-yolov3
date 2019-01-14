@@ -61,7 +61,8 @@ write_op = tf.summary.merge_all()
 writer_train = tf.summary.FileWriter("./data/log/train")
 
 update_var = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="yolov3/yolo-v3")
-train_op = optimizer.minimize(loss[0], var_list=update_var) # only update yolo layer
+with tf.control_dependencies(update_var):
+    train_op = optimizer.minimize(loss[0], var_list=update_var) # only update yolo layer
 sess.run(tf.global_variables_initializer())
 
 pretrained_weights = tf.global_variables(scope="yolov3/darknet-53")
