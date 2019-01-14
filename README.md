@@ -123,7 +123,7 @@ Non-max suppression uses the very important function called **"Intersection over
 
 Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
-## part 1. Introduction
+## part 5. Some Tutorials
 
 [- `Implementing YOLO v3 in Tensorflow (TF-Slim)`](https://itnext.io/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe)
 
