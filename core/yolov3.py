@@ -311,13 +311,13 @@ class yolov3(object):
         # numerical range: 0 ~ 1
         # shape: [N, 13, 13, 3, 2]
         true_xy = y_true[..., 0:2] / ratio[::-1] - x_y_offset
-        pred_xy = pred_box_xy / ratio[::-1] - x_y_offset
+        pred_xy = pred_box_xy      / ratio[::-1] - x_y_offset
 
         # get_tw_th
         # numerical range: 0 ~ 1
         # shape: [N, 13, 13, 3, 2]
         true_tw_th = y_true[..., 2:4] / anchors
-        pred_tw_th = pred_box_wh / anchors
+        pred_tw_th = pred_box_wh      / anchors
         # for numerical stability
         true_tw_th = tf.where(condition=tf.equal(true_tw_th, 0),
                               x=tf.ones_like(true_tw_th), y=true_tw_th)

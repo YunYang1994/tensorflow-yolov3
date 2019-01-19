@@ -136,20 +136,20 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thre
 
     return boxes, score, label
 
+def resize_image_correct_bbox(image, boxes, image_h, image_w):
 
-def resize_image_correct_bbox(image, bboxes, input_shape):
-    # image size in [H,W], box size in [W, H] W-> x, H-> y
-    image_size = tf.to_float(tf.shape(image)[0:2])[::-1]
-    image = tf.image.resize_images(image, size=input_shape)
+    origin_image_size = tf.to_float(tf.shape(image)[0:2])
+    image = tf.image.resize_images(image, size=[image_h, image_w])
 
     # correct bbox
-    xx1 = bboxes[:, 0] * input_shape[0] / image_size[0]
-    yy1 = bboxes[:, 1] * input_shape[1] / image_size[1]
-    xx2 = bboxes[:, 2] * input_shape[0] / image_size[0]
-    yy2 = bboxes[:, 3] * input_shape[1] / image_size[1]
+    xx1 = boxes[:, 0] * image_w / origin_image_size[1]
+    yy1 = boxes[:, 1] * image_h / origin_image_size[0]
+    xx2 = boxes[:, 2] * image_w / origin_image_size[1]
+    yy2 = boxes[:, 3] * image_h / origin_image_size[0]
+    idx = boxes[:, 4]
 
-    bboxes = tf.stack([xx1, yy1, xx2, yy2], axis=1)
-    return image, bboxes
+    boxes = tf.stack([xx1, yy1, xx2, yy2, idx], axis=1)
+    return image, boxes
 
 
 def draw_boxes(image, boxes, scores, labels, classes, detection_size,
@@ -358,27 +358,6 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
 
 
 
-def read_image_box_from_text(text_path):
-    """
-    :param text_path
-    :returns : {image_path:(bboxes, labels)}
-                bboxes -> [N,4],(x1, y1, x2, y2)
-                labels -> [N,]
-    """
-    data = {}
-    with open(text_path,'r') as f:
-        for line in f.readlines():
-            example = line.split(' ')
-            image_path = example[0]
-            boxes_num = len(example[1:]) // 5
-            bboxes = np.zeros([boxes_num, 4], dtype=np.float32)
-            labels = np.zeros([boxes_num, ], dtype=np.int64)
-            for i in range(boxes_num):
-                labels[i] = example[1+i*5]
-                bboxes[i] = example[2+i*5:6+i*5]
-            data[image_path] = bboxes, labels
-        return data
-
 
 def get_anchors(anchors_path):
     '''loads the anchors from a file'''
@@ -389,15 +368,18 @@ def get_anchors(anchors_path):
 
 
 class parser(object):
-    def __init__(self, anchors, num_classes, input_shape=[416, 416]):
-        self.anchors = anchors
+    def __init__(self, anchors, num_classes, input_shape=[416, 416], debug=False):
+        self.anchors     = anchors
         self.num_classes = num_classes
         self.input_shape = input_shape
+        self.debug       = debug
 
     def preprocess(self, image, true_labels, true_boxes):
         # resize_image_correct_bbox
         image, true_boxes = resize_image_correct_bbox(image, true_boxes,
                                                       input_shape=self.input_shape)
+        if self.debug: return image, true_boxes
+
         image = image / 255
         y_true_13, y_true_26, y_true_52 = tf.py_func(preprocess_true_boxes,
                             inp=[true_boxes, true_labels, self.input_shape, self.anchors, self.num_classes],
@@ -414,7 +396,6 @@ class parser(object):
             features = {
                 'image' : tf.FixedLenFeature([], dtype = tf.string),
                 'bboxes': tf.FixedLenFeature([], dtype = tf.string),
-                'labels': tf.VarLenFeature(dtype = tf.int64),
             }
         )
 

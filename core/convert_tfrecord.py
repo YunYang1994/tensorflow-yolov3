@@ -12,8 +12,8 @@
 #================================================================
 
 import sys
-import utils
 import argparse
+import numpy as np
 import tensorflow as tf
 
 def main(argv):
@@ -23,7 +23,17 @@ def main(argv):
     parser.add_argument("--num_tfrecords", default=3, type=int)
     flags = parser.parse_args()
 
-    dataset = utils.read_image_box_from_text(flags.dataset_txt)
+    dataset = {}
+    with open(flags.dataset_txt,'r') as f:
+        for line in f.readlines():
+            example = line.split(' ')
+            image_path = example[0]
+            boxes_num = len(example[1:]) // 5
+            boxes = np.zeros([boxes_num, 5], dtype=np.float32)
+            for i in range(boxes_num):
+                boxes[i] = example[1+i*5:6+i*5]
+            dataset[image_path] = boxes
+
     image_paths = list(dataset.keys())
     images_num = len(image_paths)
     print(">> Processing %d images" %images_num)
@@ -37,14 +47,13 @@ def main(argv):
             en = (n+1)*per_tfrecord_images if n < flags.num_tfrecords else len(image_paths)
             for i in range(st, en):
                 image = tf.gfile.FastGFile(image_paths[i], 'rb').read()
-                bboxes, labels = dataset[image_paths[i]]
-                bboxes = bboxes.tostring()
+                boxes = dataset[image_paths[i]]
+                boxes = boxes.tostring()
 
                 example = tf.train.Example(features = tf.train.Features(
                     feature={
                         'image' :tf.train.Feature(bytes_list = tf.train.BytesList(value = [image])),
-                        'bboxes':tf.train.Feature(bytes_list = tf.train.BytesList(value = [bboxes])),
-                        'labels':tf.train.Feature(int64_list = tf.train.Int64List(value = labels)),
+                        'boxes' :tf.train.Feature(bytes_list = tf.train.BytesList(value = [boxes])),
                     }
                 ))
 
