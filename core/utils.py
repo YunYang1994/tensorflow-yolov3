@@ -138,7 +138,7 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thre
 
 
 def resize_image_correct_bbox(image, bboxes, input_shape):
-
+    # image size in [H,W], box size in [W, H] W-> x, H-> y
     image_size = tf.to_float(tf.shape(image)[0:2])[::-1]
     image = tf.image.resize_images(image, size=input_shape)
 
@@ -345,14 +345,14 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
         for l in range(num_layers):
             if n not in anchor_mask[l]: continue
 
-            i = np.floor(true_boxes[t,0]/input_shape[0]*grid_sizes[l][0]).astype('int32')
-            j = np.floor(true_boxes[t,1]/input_shape[1]*grid_sizes[l][1]).astype('int32')
+            i = np.floor(true_boxes[t,0]/input_shape[1]*grid_sizes[l][1]).astype('int32')
+            j = np.floor(true_boxes[t,1]/input_shape[0]*grid_sizes[l][0]).astype('int32')
 
             k = anchor_mask[l].index(n)
             c = true_labels[t].astype('int32')
-            y_true[l][j, i, k, 0:4] = true_boxes[t, 0:4]
-            y_true[l][j, i, k,   4] = 1
-            y_true[l][j, i, k, 5+c] = 1
+            y_true[l][i, j, k, 0:4] = true_boxes[t, 0:4]
+            y_true[l][i, j, k,   4] = 1
+            y_true[l][i, j, k, 5+c] = 1
 
     return y_true_13, y_true_26, y_true_52
 

@@ -22,8 +22,8 @@ LR = 0.0001
 SHUFFLE_SIZE = 1
 
 sess = tf.Session()
-# classes = utils.read_coco_names('./data/coco.names')
-num_classes = 20
+classes = utils.read_coco_names('./data/voc.names')
+num_classes = len(classes)
 # file_pattern = "../COCO/tfrecords/coco*.tfrecords"
 file_pattern = "/home/yang/test/voc/voc_train*.tfrecords"
 # file_pattern = "/home/yang/test/kangaroo/tfrecords/kangaroo*.tfrecords"

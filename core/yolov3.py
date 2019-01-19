@@ -99,9 +99,8 @@ class yolov3(object):
 
         num_anchors = len(anchors) # num_anchors=3
         grid_size = feature_map.shape.as_list()[1:3]
-
-        stride = tf.cast(self.img_size // grid_size, tf.float32)
-
+        # the downscale image in height and weight
+        stride = tf.cast(self.img_size // grid_size, tf.float32) # [h,w] -> [y,x]
         feature_map = tf.reshape(feature_map, [-1, grid_size[0], grid_size[1], num_anchors, 5 + self._NUM_CLASSES])
 
         box_centers, box_sizes, conf_logits, prob_logits = tf.split(
@@ -109,8 +108,8 @@ class yolov3(object):
 
         box_centers = tf.nn.sigmoid(box_centers)
 
-        grid_x = tf.range(grid_size[0], dtype=tf.int32)
-        grid_y = tf.range(grid_size[1], dtype=tf.int32)
+        grid_x = tf.range(grid_size[1], dtype=tf.int32)
+        grid_y = tf.range(grid_size[0], dtype=tf.int32)
 
         a, b = tf.meshgrid(grid_x, grid_y)
         x_offset = tf.reshape(a, (-1, 1))
@@ -120,10 +119,9 @@ class yolov3(object):
         x_y_offset = tf.cast(x_y_offset, tf.float32)
 
         box_centers = box_centers + x_y_offset
-        box_centers = box_centers * stride
+        box_centers = box_centers * stride[::-1]
 
-        box_sizes = tf.exp(box_sizes) * anchors
-
+        box_sizes = tf.exp(box_sizes) * anchors # anchors -> [w, h]
         boxes = tf.concat([box_centers, box_sizes], axis=-1)
         return x_y_offset, boxes, conf_logits, prob_logits
 
@@ -277,7 +275,7 @@ class yolov3(object):
         grid_size = tf.shape(feature_map_i)[1:3]
         grid_size_ = feature_map_i.shape.as_list()[1:3]
 
-        y_true = tf.reshape(y_true, [-1, grid_size_[0], grid_size_[1], 3, 25])
+        y_true = tf.reshape(y_true, [-1, grid_size_[0], grid_size_[1], 3, 5+self._NUM_CLASSES])
 
         # the downscale ratio in height and weight
         ratio = tf.cast(self.img_size / grid_size, tf.float32)
@@ -285,7 +283,6 @@ class yolov3(object):
         N = tf.cast(tf.shape(feature_map_i)[0], tf.float32)
 
         x_y_offset, pred_boxes, pred_conf_logits, pred_prob_logits = self._reorg_layer(feature_map_i, anchors)
-
         # shape: take 416x416 input image and 13*13 feature_map for example:
         # [N, 13, 13, 3, 1]
         object_mask = y_true[..., 4:5]
@@ -302,7 +299,7 @@ class yolov3(object):
 
         # calc iou
         # shape: [N, 13, 13, 3, V]
-        iou = self.broadcast_iou(valid_true_box_xy, valid_true_box_wh, pred_box_xy, pred_box_wh)
+        iou = self._broadcast_iou(valid_true_box_xy, valid_true_box_wh, pred_box_xy, pred_box_wh)
 
         # shape: [N, 13, 13, 3]
         best_iou = tf.reduce_max(iou, axis=-1)
@@ -310,7 +307,6 @@ class yolov3(object):
         ignore_mask = tf.cast(best_iou < 0.5, tf.float32)
         # shape: [N, 13, 13, 3, 1]
         ignore_mask = tf.expand_dims(ignore_mask, -1)
-
         # get xy coordinates in one cell from the feature_map
         # numerical range: 0 ~ 1
         # shape: [N, 13, 13, 3, 2]
@@ -353,7 +349,7 @@ class yolov3(object):
 
         return xy_loss, wh_loss, conf_loss, class_loss
 
-    def broadcast_iou(self, true_box_xy, true_box_wh, pred_box_xy, pred_box_wh):
+    def _broadcast_iou(self, true_box_xy, true_box_wh, pred_box_xy, pred_box_wh):
         '''
         maintain an efficient way to calculate the ios matrix between ground truth true boxes and the predicted boxes
         note: here we only care about the size match
@@ -380,10 +376,9 @@ class yolov3(object):
         # shape: [N, 13, 13, 3, V]
         intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
         # shape: [N, 13, 13, 3, 1]
-        pred_box_area = pred_box_wh[..., 0] * pred_box_wh[..., 1]
+        pred_box_area  = pred_box_wh[..., 0]  * pred_box_wh[..., 1]
         # shape: [1, V]
-        true_box_area = true_box_wh[..., 0] * true_box_wh[..., 1]
-
+        true_box_area  = true_box_wh[..., 0]  * true_box_wh[..., 1]
         # [N, 13, 13, 3, V]
         iou = intersect_area / (pred_box_area + true_box_area - intersect_area)
 
