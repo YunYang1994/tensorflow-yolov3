@@ -32,6 +32,12 @@ class parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
+            "--num_classes", "-nc", default=80, type=str,
+            help="[default: %(default)s] The number of classes ...",
+            metavar="<NC>",
+        )
+
+        self.add_argument(
             "--weights_path", "-wp", default='./checkpoint/yolov3.weights', type=str,
             help="[default: %(default)s] Download binary file with desired weights",
             metavar="<WP>",
@@ -69,11 +75,9 @@ class parser(argparse.ArgumentParser):
 def main(argv):
 
     flags = parser(description="freeze yolov3 graph from checkpoint file").parse_args()
-    classes = utils.read_coco_names("./data/coco.names")
-    num_classes = len(classes)
     SIZE = flags.image_size
     print("=> the input image size is [%d, %d]" %(SIZE, SIZE))
-    model = yolov3.yolov3(num_classes)
+    model = yolov3.yolov3(flags.num_classes)
 
     with tf.Graph().as_default() as graph:
         sess = tf.Session(graph=graph)
@@ -84,13 +88,14 @@ def main(argv):
 
         boxes, confs, probs = model.predict(feature_map)
         scores = confs * probs
-        print("=>", boxes, scores)
-        boxes, scores, labels = utils.gpu_nms(boxes, scores, num_classes,
+        print("=>", boxes.name[:-2], scores.name[:-2])
+        cpu_out_node_names = [boxes.name[:-2], scores.name[:-2]]
+        boxes, scores, labels = utils.gpu_nms(boxes, scores, flags.num_classes,
                                               score_thresh=flags.score_threshold,
                                               iou_thresh=flags.iou_threshold)
-        print("=>", boxes, scores, labels)
+        print("=>", boxes.name[:-2], scores.name[:-2], labels.name[:-2])
+        gpu_out_node_names = [boxes.name[:-2], scores.name[:-2], labels.name[:-2]]
         feature_map_1, feature_map_2, feature_map_3 = feature_map
-        print("=>", feature_map_1, feature_map_2, feature_map_3)
         saver = tf.train.Saver(var_list=tf.global_variables(scope='yolov3'))
 
         if flags.convert:
@@ -111,14 +116,8 @@ def main(argv):
         if flags.freeze:
             saver.restore(sess, flags.ckpt_file)
             print('=> checkpoint file restored from ', flags.ckpt_file)
-            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', ["concat_9", "mul_6"])
-            utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', ["concat_10", "concat_11", "concat_12"])
-            utils.freeze_graph(sess, './checkpoint/yolov3_feature.pb', ["yolov3/yolo-v3/feature_map_1",
-                                                                        "yolov3/yolo-v3/feature_map_2",
-                                                                        "yolov3/yolo-v3/feature_map_3",])
+            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', cpu_out_node_names)
+            utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', gpu_out_node_names)
 
 
 if __name__ == "__main__": main(sys.argv)
-
-
-
