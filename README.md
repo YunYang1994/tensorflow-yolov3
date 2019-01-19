@@ -70,7 +70,7 @@ $ python train.py
 ```
 Take [yolov2](https://github.com/YunYang1994/tensorflow-yolov2_from_scratch) training process for example, 
 ![image](./docs/images/yolov2_loss.png)
-### 3.4 evaluate coco dataset (continue to work)
+### 3.4 evaluate coco dataset
 ```
 $ wget http://images.cocodataset.org/zips/test2017.zip
 $ wget http://images.cocodataset.org/annotations/image_info_test2017.zip 
