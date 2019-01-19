@@ -242,9 +242,9 @@ class yolov3(object):
         probs = tf.concat(probs_list, axis=1)
 
         center_x, center_y, width, height = tf.split(boxes, [1,1,1,1], axis=-1)
-        x0 = center_x - width / 2
+        x0 = center_x - width   / 2
         y0 = center_y - height  / 2
-        x1 = center_x + width / 2
+        x1 = center_x + width   / 2
         y1 = center_y + height  / 2
 
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
@@ -336,9 +336,6 @@ class yolov3(object):
         # shape: [N, 13, 13, 3, 1]
         box_loss_scale = 2. - (y_true[..., 2:3] / tf.cast(self.img_size[1], tf.float32)) * (y_true[..., 3:4] / tf.cast(self.img_size[0], tf.float32))
 
-        ############
-        # loss_part
-        ############
         # shape: [N, 13, 13, 3, 1]
         xy_loss = tf.reduce_sum(tf.square(true_xy - pred_xy) * object_mask * box_loss_scale) / N
         wh_loss = tf.reduce_sum(tf.square(true_tw_th - pred_tw_th) * object_mask * box_loss_scale) / N

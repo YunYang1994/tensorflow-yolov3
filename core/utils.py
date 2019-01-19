@@ -308,20 +308,19 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     grid_sizes = [input_shape//32, input_shape//16, input_shape//8]
 
     box_centers = (true_boxes[:, 0:2] + true_boxes[:, 2:4]) / 2 # the center of box
-    box_sizes =  true_boxes[:, 2:4] - true_boxes[:, 0:2] # the height and width of box
+    box_sizes =    true_boxes[:, 2:4] - true_boxes[:, 0:2] # the height and width of box
 
     true_boxes[:, 0:2] = box_centers
     true_boxes[:, 2:4] = box_sizes
 
-    y_true_13 = np.zeros(shape=[grid_sizes[0][0], grid_sizes[0][1], 3, 5+num_classes], dtype=np.float32)
-    y_true_26 = np.zeros(shape=[grid_sizes[1][0], grid_sizes[1][1], 3, 5+num_classes], dtype=np.float32)
-    y_true_52 = np.zeros(shape=[grid_sizes[2][0], grid_sizes[2][1], 3, 5+num_classes], dtype=np.float32)
+    y_true_13 = np.zeros(shape=[grid_sizes[0][1], grid_sizes[0][0], 3, 5+num_classes], dtype=np.float32)
+    y_true_26 = np.zeros(shape=[grid_sizes[1][1], grid_sizes[1][0], 3, 5+num_classes], dtype=np.float32)
+    y_true_52 = np.zeros(shape=[grid_sizes[2][1], grid_sizes[2][0], 3, 5+num_classes], dtype=np.float32)
 
     y_true = [y_true_13, y_true_26, y_true_52]
     anchors_max =  anchors / 2.
     anchors_min = -anchors_max
     valid_mask = box_sizes[:, 0] > 0
-
 
     # Discard zero rows.
     wh = box_sizes[valid_mask]
@@ -345,13 +344,15 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     for t, n in enumerate(best_anchor):
         for l in range(num_layers):
             if n not in anchor_mask[l]: continue
+
             i = np.floor(true_boxes[t,0]/input_shape[0]*grid_sizes[l][0]).astype('int32')
             j = np.floor(true_boxes[t,1]/input_shape[1]*grid_sizes[l][1]).astype('int32')
+
             k = anchor_mask[l].index(n)
             c = true_labels[t].astype('int32')
-            y_true[l][i, j, k, 0:4] = true_boxes[t, 0:4]
-            y_true[l][i, j, k,   4] = 1
-            y_true[l][i, j, k, 5+c] = 1
+            y_true[l][j, i, k, 0:4] = true_boxes[t, 0:4]
+            y_true[l][j, i, k,   4] = 1
+            y_true[l][j, i, k, 5+c] = 1
 
     return y_true_13, y_true_26, y_true_52
 
