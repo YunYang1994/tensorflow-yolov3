@@ -135,11 +135,11 @@ Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
 [- **`Implementing YOLO v3 in Tensorflow (TF-Slim)`**](https://itnext.io/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe)
 
-[- `Object Detection using YOLOv2 on Pascal VOC2012`](https://fairyonice.github.io/Part_1_Object_Detection_with_Yolo_for_VOC_2014_data_anchor_box_clustering.html)
+[- **`Object Detection using YOLOv2 on Pascal VOC2012`**](https://fairyonice.github.io/Part_1_Object_Detection_with_Yolo_for_VOC_2014_data_anchor_box_clustering.html)
 
-[-`Understanding YOLO`](https://hackernoon.com/understanding-yolo-f5a74bbc7967)
+[-**`Understanding YOLO`**](https://hackernoon.com/understanding-yolo-f5a74bbc7967)
 
-[- `YOLOv3目标检测有了TensorFlow实现，可用自己的数据来训练`](https://mp.weixin.qq.com/s/cq7g1-4oFTftLbmKcpi_aQ)<br>
+[-**`YOLOv3目标检测有了TensorFlow实现，可用自己的数据来训练`**](https://mp.weixin.qq.com/s/cq7g1-4oFTftLbmKcpi_aQ)<br>
 
 [- `学员分享 | 小哥哥和用YOLOv3做目标检测的故事「文末送课」`](https://mp.weixin.qq.com/s/dFiOkUsal62EoME52Iw-uQ)
 
@@ -147,3 +147,4 @@ Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
 [-` YOLOv2は、2016年12月25日時点の、速度、精度ともに世界最高のリアルタイム物体検出手法です。`](https://github.com/leetenki/YOLOv2/blob/master/YOLOv2.md)
 
+[-` 知乎专栏-目标检测yolov2`](https://zhuanlan.zhihu.com/p/35325884)
