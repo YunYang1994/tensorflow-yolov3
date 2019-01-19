@@ -30,10 +30,10 @@ num_classes = len(classes)
 train_tfrecord = "./raccoon_dataset/raccoon*.tfrecords"
 anchors = utils.get_anchors('./data/raccoon_anchors.txt')
 
-parser   = Parser(416, 416, anchors, num_classes, debug=True)
-trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=100)
-example  = trainset.get_next()
-
+# 检查图片的resize是否正确
+# parser   = Parser(416, 416, anchors, num_classes, debug=True)
+# trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=100)
+# example  = trainset.get_next()
 # for l in range(20):
     # image, boxes = sess.run(example)
     # image, boxes = image[0], boxes[0]
@@ -48,6 +48,7 @@ example  = trainset.get_next()
     # image = Image.fromarray(np.uint8(image))
     # image.show()
 
+# 检查输出的feature_map
 parser   = Parser(416, 416, anchors, num_classes, debug=False)
 trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=100)
 
