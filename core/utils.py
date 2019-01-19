@@ -137,31 +137,6 @@ def cpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thre
     return boxes, score, label
 
 
-# def resize_image_correct_bbox(image, bboxes, input_shape):
-    # """
-    # Parameters:
-    # -----------
-    # :param image: the type of `PIL.JpegImagePlugin.JpegImageFile`
-    # :param input_shape: the shape of input image to the yolov3 network, [416, 416]
-    # :param bboxes: numpy.ndarray of shape [N,4], N: the number of boxes in one image
-                                                 # 4: x1, y1, x2, y2
-
-    # Returns:
-    # ----------
-    # image: the type of `PIL.JpegImagePlugin.JpegImageFile`
-    # bboxes: numpy.ndarray of shape [N,4], N: the number of boxes in one image
-    # """
-    # image_size = image.size
-    # # resize image to the input shape
-    # image = image.resize(tuple(input_shape))
-    # # correct bbox
-    # bboxes[:,0] = bboxes[:,0] * input_shape[0] / image_size[0]
-    # bboxes[:,1] = bboxes[:,1] * input_shape[1] / image_size[1]
-    # bboxes[:,2] = bboxes[:,2] * input_shape[0] / image_size[0]
-    # bboxes[:,3] = bboxes[:,3] * input_shape[1] / image_size[1]
-
-    # return image, bboxes
-
 def resize_image_correct_bbox(image, bboxes, input_shape):
 
     image_size = tf.to_float(tf.shape(image)[0:2])[::-1]
