@@ -119,9 +119,11 @@ Non-max suppression uses the very important function called **"Intersection over
 
 Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
-## part 5. Some Tutorials
+## part 5. Some Other Tutorials
 
-[- `Implementing YOLO v3 in Tensorflow (TF-Slim)`](https://itnext.io/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe)
+[- **`YOLOv3_TensorFlow`**](https://github.com/wizyoung/YOLOv3_TensorFlow)
+
+[- **`Implementing YOLO v3 in Tensorflow (TF-Slim)`**](https://itnext.io/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe)
 
 [- `Object Detection using YOLOv2 on Pascal VOC2012`](https://fairyonice.github.io/Part_1_Object_Detection_with_Yolo_for_VOC_2014_data_anchor_box_clustering.html)
 
