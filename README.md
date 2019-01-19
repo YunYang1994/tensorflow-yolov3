@@ -33,7 +33,11 @@ $ python video_demo.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train on your own dataset
-### 3.1 train coco dataset
+### 3.1 anchors clustering
+The paper suggests to use clustering on bounding box shape to find the good anchor box specialization suited for the data. more details see [here](https://nbviewer.jupyter.org/github/YunYang1994/tensorflow-yolov3/blob/master/Box-Clustering.ipynb)
+![image](./docs/images/K-means.png)
+
+### 3.2 train coco dataset
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/train_data/COCO`
 ```bashrc
 $ cd data/train_data/COCO
