@@ -45,7 +45,7 @@ $ sh scripts/make_raccoon_tfrecords.sh
 $ python train.py
 ```
 
-### 3.2 train coco dataset
+### 3.3 train coco dataset
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　
 ```bashrc
 $ wget http://images.cocodataset.org/zips/train2017.zip
