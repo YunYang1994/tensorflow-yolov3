@@ -85,7 +85,7 @@ class Parser(object):
         intersect_maxs = np.minimum(boxes_max, anchors_max)
         intersect_wh   = np.maximum(intersect_maxs - intersect_mins, 0.)
         intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
-        box_area = wh[..., 0] * wh[..., 1]
+        box_area       = wh[..., 0] * wh[..., 1]
 
         anchor_area = self.anchors[:, 0] * self.anchors[:, 1]
         iou = intersect_area / (box_area + anchor_area - intersect_area)
@@ -102,9 +102,9 @@ class Parser(object):
                 k = anchor_mask[l].index(n)
                 c = gt_boxes[t, 4].astype('int32')
 
-                y_true[l][i, j, k, 0:4] = gt_boxes[t, 0:4]
-                y_true[l][i, j, k,   4] = 1
-                y_true[l][i, j, k, 5+c] = 1
+                y_true[l][j, i, k, 0:4] = gt_boxes[t, 0:4]
+                y_true[l][j, i, k,   4] = 1.
+                y_true[l][j, i, k, 5+c] = 1.
 
         return y_true_13, y_true_26, y_true_52
 
