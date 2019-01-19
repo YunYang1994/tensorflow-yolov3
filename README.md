@@ -38,7 +38,7 @@ The paper suggests to use clustering on bounding box shape to find the good anch
 ![image](./docs/images/K-means.png)
 
 ### 3.2 train raccoon dataset
-raccoon dataset has only one class, I have prepare a shell script in the '`./scripts` which enables you have a quick understanding of yolov3 training propress.
+[raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepare a shell script in the '`./scripts` which enables you have a quick understanding of yolov3 training propress.
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
 $ python train.py
