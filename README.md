@@ -37,10 +37,16 @@ $ python video_demo.py # if use camera, set video_path = 0
 The paper suggests to use clustering on bounding box shape to find the good anchor box specialization suited for the data. more details see [here](https://nbviewer.jupyter.org/github/YunYang1994/tensorflow-yolov3/blob/master/docs/Box-Clustering.ipynb)
 ![image](./docs/images/K-means.png)
 
+### 3.2 train raccoon dataset
+raccoon dataset has only one class, I have prepare a shell script in the '`./scripts` which enables you have a quick understanding of yolov3 training propress.
+```
+$ sh scripts/make_raccoon_tfrecords.sh
+$ python train.py
+```
+
 ### 3.2 train coco dataset
-Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　and put them in the `./data/train_data/COCO`
+Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　
 ```bashrc
-$ cd data/train_data/COCO
 $ wget http://images.cocodataset.org/zips/train2017.zip
 $ unzip train2017.zip
 $ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
@@ -48,24 +54,23 @@ $ unzip annotations_trainval2017.zip
 ```
 Then you are supposed to extract some useful information such as bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
 ```
-$ python core/extract_coco.py --dataset_info_path ./data/train_data/COCO/train2017.txt
+$ python scripts/extract_coco.py -h
 ```
-As a result, you will get  `./data/train_data/COCO/train2017.txt`.  Here is an example row for one image:<br>
+As a result, you will get  `train2017.txt`.  Here is an example row for one image:<br>
 ```
-/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 20 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94
-/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 16 55.38 132.63 519.84 380.4
-# image_path, category_id, x_min, y_min, x_max, y_max, category_id, x_min, y_min, ...
+/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94 20 
+/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 55.38 132.63 519.84 380.4 16
+# image_path, x_min, y_min, x_max, y_max, category_id,  x_min, y_min, ... category_id, 
 ```
 In this step, you will convert image dataset into some `.tfrecord`  which are a kind of recommended file format for Tensorflow to store your data as  binary file. Finally, you can train it now!
 ```
-$ python core/convert_tfrecord.py --dataset ./data/train_data/COCO/train2017.txt  --tfrecord_path_prefix ./data/train_data/COCO/tfrecords/coco --num_tfrecords 100
+$ python core/convert_tfrecord.py -h
 $ python train.py
 ```
 Take [yolov2](https://github.com/YunYang1994/tensorflow-yolov2_from_scratch) training process for example, 
 ![image](./docs/images/yolov2_loss.png)
 ### 3.3 evaluate coco dataset (continue to work)
 ```
-$ cd data/train_data/COCO
 $ wget http://images.cocodataset.org/zips/test2017.zip
 $ wget http://images.cocodataset.org/annotations/image_info_test2017.zip 
 $ unzip test2017.zip

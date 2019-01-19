@@ -22,7 +22,7 @@ def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("--json_path", default='/home/yang/test/COCO/annotations/instances_train2017.json')
     parser.add_argument("--image_path", default="/home/yang/test/COCO/train2017")
-    parser.add_argument("--dataset_info_path", default="./data/train_data/COCO/train2017.txt")
+    parser.add_argument("--dataset_info_path", default="./data/train2017.txt")
     flags = parser.parse_args()
 
     dataset = defaultdict(list)
@@ -55,12 +55,12 @@ def main(argv):
         for single_image_path in dataset.keys():
             write_content = [single_image_path]
             for category_id, box in dataset[single_image_path]:
-                write_content.append(str(category_id))
                 x_min, y_min, x_max, y_max = box
                 write_content.append(str(x_min))
                 write_content.append(str(y_min))
                 write_content.append(str(x_max))
                 write_content.append(str(y_max))
+                write_content.append(str(category_id))
             write_content = " ".join(write_content)
             print(write_content)
             f.write(write_content+'\n')
