@@ -34,7 +34,7 @@ $ python video_demo.py # if use camera, set video_path = 0
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train on your own dataset
 ### 3.1 anchors clustering
-The paper suggests to use clustering on bounding box shape to find the good anchor box specialization suited for the data. more details see [here](https://nbviewer.jupyter.org/github/YunYang1994/tensorflow-yolov3/blob/master/Box-Clustering.ipynb)
+The paper suggests to use clustering on bounding box shape to find the good anchor box specialization suited for the data. more details see [here](https://nbviewer.jupyter.org/github/YunYang1994/tensorflow-yolov3/blob/master/docs/Box-Clustering.ipynb)
 ![image](./docs/images/K-means.png)
 
 ### 3.2 train coco dataset
@@ -140,8 +140,4 @@ Hope it helps you, Start your tensorflow-yolv3 journey here now!
 [-`目标检测|YOLOv2原理与实现(附YOLOv3)`](https://zhuanlan.zhihu.com/p/35325884)
 
 [-` YOLOv2は、2016年12月25日時点の、速度、精度ともに世界最高のリアルタイム物体検出手法です。`](https://github.com/leetenki/YOLOv2/blob/master/YOLOv2.md)
-
-
-
-
 
