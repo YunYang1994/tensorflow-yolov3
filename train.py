@@ -17,8 +17,8 @@ from core import utils, yolov3
 from core.dataset import dataset, Parser
 
 INPUT_SIZE = 416
-BATCH_SIZE = 1
-EPOCHS = 700000
+BATCH_SIZE = 8
+EPOCHS = 20000
 LR = 0.0001
 SHUFFLE_SIZE = 1
 
