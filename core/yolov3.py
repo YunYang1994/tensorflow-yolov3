@@ -112,8 +112,8 @@ class yolov3(object):
         grid_y = tf.range(grid_size[0], dtype=tf.int32)
 
         a, b = tf.meshgrid(grid_x, grid_y)
-        x_offset = tf.reshape(a, (-1, 1))
-        y_offset = tf.reshape(b, (-1, 1))
+        x_offset   = tf.reshape(a, (-1, 1))
+        y_offset   = tf.reshape(b, (-1, 1))
         x_y_offset = tf.concat([x_offset, y_offset], axis=-1)
         x_y_offset = tf.reshape(x_y_offset, [grid_size[0], grid_size[1], 1, 2])
         x_y_offset = tf.cast(x_y_offset, tf.float32)
