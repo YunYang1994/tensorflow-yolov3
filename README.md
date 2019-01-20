@@ -45,7 +45,7 @@ $ sh scripts/make_raccoon_tfrecords.sh
 $ python train.py
 $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
 ```
-Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you set `iou_thresh = 0.5, score_thresh=0.3`.
+Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 
 ### 3.3 train coco dataset
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　
