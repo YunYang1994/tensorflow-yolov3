@@ -47,7 +47,17 @@ $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/r
 ```
 Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 
-### 3.3 train coco dataset
+### 3.3 train VOC dataset
+Download VOC-2012 trainval data
+```bashrc
+$ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+```
+test data is avaliable [here](http://host.robots.ox.ac.uk:8080/eval/downloads/VOC2012test.tar). but you need to login first.
+
+
+
+
+### 3.4 train coco dataset
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　
 ```bashrc
 $ wget http://images.cocodataset.org/zips/train2017.zip
