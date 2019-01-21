@@ -42,7 +42,7 @@ The paper suggests to use clustering on bounding box shape to find the good anch
 ```
 $ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/darknet53.conv.74
 $ sh scripts/make_raccoon_tfrecords.sh
-$ python train.py
+$ python quick_train.py
 $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
 ```
 Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
@@ -52,9 +52,11 @@ Download VOC-2012 trainval data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 ```
-test data is avaliable [here](http://host.robots.ox.ac.uk:8080/eval/downloads/VOC2012test.tar). but you need to login first.
-
-
+test data is avaliable [here](http://host.robots.ox.ac.uk:8080/eval/downloads/VOC2012test.tar). but you need to login first. Then you need to edit your VOC dataset path in `make_voc_tfrecords.sh`.
+```
+$ sh scripts/make_voc_tfrecords.sh 
+$ python train.py
+```
 
 
 ### 3.4 train coco dataset

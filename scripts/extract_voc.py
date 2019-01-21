@@ -15,14 +15,10 @@ import os
 import argparse
 import xml.etree.ElementTree as ET
 
-
 LABELS = ['aeroplane',  'bicycle', 'bird',  'boat',      'bottle',
           'bus',        'car',      'cat',  'chair',     'cow',
           'diningtable','dog',    'horse',  'motorbike', 'person',
           'pottedplant','sheep',  'sofa',   'train',   'tvmonitor']
-
-train_image_folder = "/home/yang/test/VOCdevkit/VOC2012/JPEGImages/"
-train_annot_folder = "/home/yang/test/VOCdevkit/VOC2012/Annotations/"
 
 
 def parse_annotation(ann_dir, img_dir, labels=[]):
@@ -82,14 +78,23 @@ def parse_annotation(ann_dir, img_dir, labels=[]):
                                 obj['ymax'] = int(round(float(dim.text)))
 
         if len(img['object']) > 0: all_imgs += [img]
-
     return all_imgs, seen_labels
 
-dataset = parse_annotation(train_annot_folder, train_image_folder)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--voc_data_path", default="/home/yang/VOC/train/")
+parser.add_argument("--dataset_txt",   default="./dataset.txt")
+flags = parser.parse_args()
+
+
+image_folder = flags.voc_data_path + "/VOCdevkit/VOC2012/JPEGImages/"
+annot_folder = flags.voc_data_path + "/VOCdevkit/VOC2012/Annotations/"
+
+dataset = parse_annotation(annot_folder, image_folder)
 all_imgs = dataset[0]
 write_lines = []
 
-with open('VOCdevkit_2012.txt', 'w') as f:
+with open(flags.dataset_txt, 'w') as f:
     for all_img in all_imgs:
         image_path = all_img['filename']
         objects    = all_img['object']
@@ -105,3 +110,5 @@ with open('VOCdevkit_2012.txt', 'w') as f:
 
         line = " ".join(line) + "\n"
         f.writelines(line)
+
+
