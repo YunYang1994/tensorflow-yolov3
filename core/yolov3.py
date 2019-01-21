@@ -65,13 +65,13 @@ class darknet53(object):
 
 class yolov3(object):
 
-    def __init__(self, num_classes=80,
-                 batch_norm_decay=0.9, leaky_relu=0.1, anchors_path='./data/yolo_anchors.txt'):
+    def __init__(self, num_classes, anchors,
+                 batch_norm_decay=0.9, leaky_relu=0.1):
 
         # self._ANCHORS = [[10 ,13], [16 , 30], [33 , 23],
                          # [30 ,61], [62 , 45], [59 ,119],
                          # [116,90], [156,198], [373,326]]
-        self._ANCHORS = utils.get_anchors(anchors_path)
+        self._ANCHORS = anchors
         self._BATCH_NORM_DECAY = batch_norm_decay
         self._LEAKY_RELU = leaky_relu
         self._NUM_CLASSES = num_classes
@@ -313,8 +313,7 @@ class yolov3(object):
         true_xy = y_true[..., 0:2] / ratio[::-1] - x_y_offset
         pred_xy = pred_box_xy      / ratio[::-1] - x_y_offset
 
-        # get_tw_th
-        # numerical range: 0 ~ 1
+        # get_tw_th, numerical range: 0 ~ 1
         # shape: [N, 13, 13, 3, 2]
         true_tw_th = y_true[..., 2:4] / anchors
         pred_tw_th = pred_box_wh      / anchors
@@ -333,7 +332,7 @@ class yolov3(object):
         box_loss_scale = 2. - (y_true[..., 2:3] / tf.cast(self.img_size[1], tf.float32)) * (y_true[..., 3:4] / tf.cast(self.img_size[0], tf.float32))
 
         # shape: [N, 13, 13, 3, 1]
-        xy_loss = tf.reduce_sum(tf.square(true_xy - pred_xy) * object_mask * box_loss_scale) / N
+        xy_loss = tf.reduce_sum(tf.square(true_xy    - pred_xy) * object_mask * box_loss_scale) / N
         wh_loss = tf.reduce_sum(tf.square(true_tw_th - pred_tw_th) * object_mask * box_loss_scale) / N
 
         # shape: [N, 13, 13, 3, 1]
