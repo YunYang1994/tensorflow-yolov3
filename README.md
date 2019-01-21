@@ -33,11 +33,32 @@ $ python video_demo.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train on your own dataset
-### 3.1 anchors clustering
-The paper suggests to use clustering on bounding box shape to find the good anchor box specialization suited for the data. more details see [here](https://nbviewer.jupyter.org/github/YunYang1994/tensorflow-yolov3/blob/master/docs/Box-Clustering.ipynb)
-![image](./docs/images/K-means.png)
+Three files are requirements as follows:
 
-### 3.2 train raccoon dataset
+- `dataset.txt`: 
+
+```
+/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94 20 
+/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 55.38 132.63 519.84 380.4 16
+# image_path, x_min, y_min, x_max, y_max, category_id,  x_min, y_min, ... category_id, 
+```
+- `anchors.txt`
+
+```
+10,13, 16,30, 33,23, 30,61, 62,45, 59,119, 116,90,  156,198,  373,326
+```
+
+- `class.names`
+
+```
+person
+bicycle
+car
+...
+toothbrush
+```
+
+### 3.1 train raccoon dataset
 [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data.
 ```
 $ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/darknet53.conv.74
@@ -47,17 +68,17 @@ $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/r
 ```
 Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 
-### 3.3 train VOC dataset
+### 3.2 train VOC dataset
 Download VOC-2012 trainval data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 ```
-test data is avaliable [here](http://host.robots.ox.ac.uk:8080/eval/downloads/VOC2012test.tar). but you need to login first. Then you need to edit your VOC dataset path in `make_voc_tfrecords.sh`.
+test data is avaliable [here](http://host.robots.ox.ac.uk:8080/eval/downloads/VOC2012test.tar). but you need to login first. Then you need to edit your VOC dataset path in `make_voc_tfrecords.sh`. In this step, you will extract some useful information such as bounding box, category id .etc from VOC dataset and convert them into some `.tfrecord`
 ```
-$ sh scripts/make_voc_tfrecords.sh 
+$ sh scripts/make_voc_tfrecords.sh
+$ python show_input_image.py   # show your input image (optional)
 $ python train.py
 ```
-
 
 ### 3.4 train coco dataset
 Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　
@@ -94,18 +115,22 @@ $ unzip image_info_test2017.zip
 
 ## part 4. Why it is so magical ?
 YOLO stands for You Only Look Once. It's an object detector that uses features learned by a deep convolutional neural network to detect an object. Although we has successfully run these codes, we must understand how YOLO works. 
-### 4.1 Architercutre details
+### 4.1 anchors clustering
+The paper suggests to use clustering on bounding box shape to find the good anchor box specialization suited for the data. more details see [here](https://nbviewer.jupyter.org/github/YunYang1994/tensorflow-yolov3/blob/master/docs/Box-Clustering.ipynb)
+![image](./docs/images/K-means.png)
+
+### 4.2 Architercutre details
 In this project, I use the pretrained weights, where we have 80 trained yolo classes (COCO dataset), for recognition. And the class [label](./data/coco.names) is represented as  `c`  and it's integer from 1 to 80, each number represents the class label accordingly. If `c=3`, then the classified object is a  `car`.  The image features learned by the deep convolutional layers are passed onto a classifier and regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).details also see in the below picture. (thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!)
 
 ![image](./docs/images/levio.jpeg)
 
-### 4.2 Neural network io:
+### 4.3 Neural network io:
 -  **input** : [None, 416, 416, 3]
 -  **output** : confidece of an object being present in the rectangle, list of rectangles position and sizes and classes of the objects begin detected. Each bounding box is represented by 6 numbers `(Rx, Ry, Rh, Rw, Pc, C1..Cn)` as explained above. In this case n=80, which means we have `c` as 80-dimensional vector, and the final size of representing the bounding box is 85.  why is 85? see also in the below picture
 ![image](./docs/images/probability_extraction.png)
 As you can see in the above picture, The first number `Pc` is the confidence of an project, The second four number `bx, by, bh, bw` represents the information of bounding boxes. The last 80 number each is the output probability of corresponding-index class.
 
-### 4.3 Filtering with score threshold
+### 4.4 Filtering with score threshold
 
 The output result may contain several rectangles that are false positives or overlap,  if your input image size of `[416, 416, 3]`, you will get `(52X52+26X26+13X13)x3=10647` boxes since YOLO v3 totally uses 9 anchor boxes. (Three for each scale). So It is time to find a way to reduce them. The first attempt to reduce these rectangles is to filter them by score threshold.
 
@@ -121,7 +146,7 @@ score_thresh=0.4
 mask = tf.greater_equal(scores, tf.constant(score_thresh))
 ```
 
-### 4.4 Do non-maximum suppression
+### 4.5 Do non-maximum suppression
 
 Even after yolo filtering by thresholding over, we still have a lot of overlapping boxes. Second approach and filtering is Non-Maximum suppression algorithm.
 
