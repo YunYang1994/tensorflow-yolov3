@@ -17,7 +17,7 @@ from core.dataset import dataset, Parser
 sess = tf.Session()
 
 IMAGE_H, IMAGE_W = 416, 416
-BATCH_SIZE       = 16
+BATCH_SIZE       = 8
 EPOCHS           = 2000*1000
 LR               = 0.0001
 SHUFFLE_SIZE     = 1000
@@ -70,12 +70,12 @@ for epoch in range(EPOCHS):
     writer_train.flush() # Flushes the event file to disk
     if (epoch+1)%1000 == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch)
 
-    run_items = sess.run([train_op, write_op] + loss, feed_dict={is_training:False})
-    writer_test.add_summary(run_items[1], global_step=epoch)
+    run_items = sess.run([write_op] + loss, feed_dict={is_training:False})
+    writer_test.add_summary(run_items[0], global_step=epoch)
     writer_test.flush() # Flushes the event file to disk
 
     print("=> EPOCH:%10d \tloss_xy:%7.4f \tloss_wh:%7.4f \tloss_conf:%7.4f \tloss_class:%7.4f"
-          %(epoch, run_items[3], run_items[4], run_items[5], run_items[6]))
+          %(epoch, run_items[2], run_items[3], run_items[4], run_items[5]))
 
 
 
