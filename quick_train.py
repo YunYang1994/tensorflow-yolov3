@@ -14,26 +14,26 @@
 import tensorflow as tf
 from core import utils, yolov3
 from core.dataset import dataset, Parser
-
-INPUT_SIZE = 416
-BATCH_SIZE = 8
-EPOCHS = 20000
-LR = 0.0001
-SHUFFLE_SIZE = 1
-
 sess = tf.Session()
-classes = utils.read_coco_names('./data/raccoon.names')
-num_classes = len(classes)
+
+IMAGE_H, IMAGE_W = 416, 416
+BATCH_SIZE       = 16
+EPOCHS           = 20000
+LR               = 0.0001
+SHUFFLE_SIZE     = 1000
+CLASSES          = utils.read_coco_names('./data/raccoon.names')
+NUM_CLASSES      = len(CLASSES)
+ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt')
+
 train_tfrecord = "./raccoon_dataset/raccoon*.tfrecords"
-anchors = utils.get_anchors('./data/raccoon_anchors.txt')
 is_training = tf.placeholder(dtype=tf.bool, name="phase_train")
 
-parser   = Parser(416, 416, anchors, num_classes)
-trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=100)
+parser   = Parser(IMAGE_H, IMAGE_W, ANCHORS, NUM_CLASSES)
+trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=SHUFFLE_SIZE)
 example  = trainset.get_next()
 
 images, *y_true = example
-model = yolov3.yolov3(num_classes)
+model = yolov3.yolov3(NUM_CLASSES,ANCHORS)
 with tf.variable_scope('yolov3'):
     y_pred = model.forward(images, is_training=is_training)
     loss = model.compute_loss(y_pred, y_true)
@@ -45,7 +45,6 @@ tf.summary.scalar("loss/coord_loss", loss[1])
 tf.summary.scalar("loss/sizes_loss", loss[2])
 tf.summary.scalar("loss/confs_loss", loss[3])
 tf.summary.scalar("loss/class_loss", loss[4])
-tf.summary.scalar("yolov3/total_loss", loss[0])
 
 write_op = tf.summary.merge_all()
 writer_train = tf.summary.FileWriter("./data/train")
@@ -66,5 +65,6 @@ for epoch in range(EPOCHS):
     writer_train.flush() # Flushes the event file to disk
     if epoch%1000 == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch)
 
-    print("=> EPOCH:%10d \ttotal_loss:%7.4f \tloss_xy:%7.4f \tloss_wh:%7.4f \tloss_conf:%7.4f \tloss_class:%7.4f"
-          %(epoch, run_items[2], run_items[3], run_items[4], run_items[5], run_items[6]))
+    print("=> EPOCH:%10d \tloss_xy:%7.4f \tloss_wh:%7.4f \tloss_conf:%7.4f \tloss_class:%7.4f"
+          %(epoch, run_items[3], run_items[4], run_items[5], run_items[6]))
+
