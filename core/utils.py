@@ -422,9 +422,10 @@ def bbox_iou(A, B):
 
     return iou
 
-def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
+def evaluate(y_pred, y_true, iou_thresh=0.5, score_thresh=0.3):
 
-    num_images = y_true[0].shape[0]
+    num_images  = y_true[0].shape[0]
+    num_classes = y_true[0][0][..., 5:].shape[-1]
     true_labels_dict   = {i:0 for i in range(num_classes)} # {class: count}
     pred_labels_dict   = {i:0 for i in range(num_classes)}
     true_positive_dict = {i:0 for i in range(num_classes)}
@@ -458,9 +459,12 @@ def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
 
         true_boxes[:,0:2] = box_centers - box_sizes / 2.
         true_boxes[:,2:4] = true_boxes[:,0:2] + box_sizes
-
         pred_labels_list = [] if pred_labels is None else pred_labels.tolist()
-        if pred_labels_list == []: continue
+
+        if len(pred_labels_list) != 0:
+            for cls, count in Counter(pred_labels_list).items(): pred_labels_dict[cls] += count
+        else:
+            continue
 
         detected = []
         for k in range(len(true_labels_list)):
@@ -468,8 +472,9 @@ def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
             iou = bbox_iou(true_boxes[k:k+1], pred_boxes)
             m = np.argmax(iou) # Extract index of largest overlap
             if iou[m] >= iou_thresh and true_labels_list[k] == pred_labels_list[m] and m not in detected:
-                pred_labels_dict[true_labels_list[k]] += 1
+                # pred_labels_dict[true_labels_list[k]] += 1
                 detected.append(m)
+
         pred_labels_list = [pred_labels_list[m] for m in detected]
 
         for c in range(num_classes):
@@ -479,9 +484,7 @@ def evaluate(y_pred, y_true, num_classes, score_thresh=0.5, iou_thresh=0.5):
 
     recall    = sum(true_positive_dict.values()) / (sum(true_labels_dict.values()) + 1e-6)
     precision = sum(true_positive_dict.values()) / (sum(pred_labels_dict.values()) + 1e-6)
-    avg_prec  = [true_positive_dict[i] / (true_labels_dict[i] + 1e-6) for i in range(num_classes)]
-    mAP       = sum(avg_prec) / (sum([avg_prec[i] != 0 for i in range(num_classes)]) + 1e-6)
 
-    return recall, precision, mAP
+    return recall, precision
 
 
