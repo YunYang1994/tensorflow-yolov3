@@ -71,9 +71,10 @@ Finally, you need to write a demo script like `nms_demo.py`. Here I strongly rec
 ### 3.2 train VOC dataset
 Download VOC-2012 trainval data
 ```bashrc
-$ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+$ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+$ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
 ```
-test data is avaliable [here](http://host.robots.ox.ac.uk:8080/eval/downloads/VOC2012test.tar). but you need to login first. Then you need to edit your VOC dataset path in `make_voc_tfrecords.sh`. In this step, you will extract some useful information such as bounding box, category id .etc from VOC dataset and convert them into some `.tfrecord`
+Then you need to edit your VOC dataset path in `make_voc_tfrecords.sh`. In this step, you will extract some useful information such as bounding box, category id .etc from VOC dataset and convert them into some `.tfrecord`
 ```
 $ sh scripts/make_voc_tfrecords.sh
 $ python show_input_image.py   # show your input image (optional)
