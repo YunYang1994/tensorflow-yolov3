@@ -23,9 +23,9 @@ INPUT_SIZE = 416
 BATCH_SIZE = 1
 SHUFFLE_SIZE = 1
 
-train_tfrecord = "/home/yang/VOC/train/voc_train*.tfrecords"
-test_tfrecord  = "/home/yang/VOC/test/voc_test*.tfrecords"
-anchors        = utils.get_anchors('./data/yolo_anchors.txt')
+train_tfrecord = "/home/yang/test/VOC/train/voc_train*.tfrecords"
+test_tfrecord  = "/home/yang/test/VOC/test/voc_test*.tfrecords"
+anchors        = utils.get_anchors('./data/voc_anchors.txt')
 classes = utils.read_coco_names('./data/voc.names')
 num_classes = len(classes)
 
