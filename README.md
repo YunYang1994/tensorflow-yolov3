@@ -69,7 +69,7 @@ $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/r
 Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 
 ### 3.2 train VOC dataset
-Download VOC-2012 trainval data
+Download VOC-2007 trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
