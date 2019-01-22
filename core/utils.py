@@ -313,9 +313,9 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
     true_boxes[:, 0:2] = box_centers
     true_boxes[:, 2:4] = box_sizes
 
-    y_true_13 = np.zeros(shape=[grid_sizes[0][1], grid_sizes[0][0], 3, 5+num_classes], dtype=np.float32)
-    y_true_26 = np.zeros(shape=[grid_sizes[1][1], grid_sizes[1][0], 3, 5+num_classes], dtype=np.float32)
-    y_true_52 = np.zeros(shape=[grid_sizes[2][1], grid_sizes[2][0], 3, 5+num_classes], dtype=np.float32)
+    y_true_13 = np.zeros(shape=[grid_sizes[0][0], grid_sizes[0][1], 3, 5+num_classes], dtype=np.float32)
+    y_true_26 = np.zeros(shape=[grid_sizes[1][0], grid_sizes[1][1], 3, 5+num_classes], dtype=np.float32)
+    y_true_52 = np.zeros(shape=[grid_sizes[2][0], grid_sizes[2][1], 3, 5+num_classes], dtype=np.float32)
 
     y_true = [y_true_13, y_true_26, y_true_52]
     anchors_max =  anchors / 2.
@@ -351,8 +351,8 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
             k = anchor_mask[l].index(n)
             c = true_labels[t].astype('int32')
             y_true[l][j, i, k, 0:4] = true_boxes[t, 0:4]
-            y_true[l][j, i, k,   4] = 1
-            y_true[l][j, i, k, 5+c] = 1
+            y_true[l][j, i, k,   4] = 1.
+            y_true[l][j, i, k, 5+c] = 1.
 
     return y_true_13, y_true_26, y_true_52
 
