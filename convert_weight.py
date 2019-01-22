@@ -83,7 +83,8 @@ def main(argv):
     flags = parser(description="freeze yolov3 graph from checkpoint file").parse_args()
     SIZE = flags.image_size
     print("=> the input image size is [%d, %d]" %(SIZE, SIZE))
-    model = yolov3.yolov3(flags.num_classes, anchors_path=flags.anchors_path)
+    anchors = utils.get_anchors(flags.anchors_path)
+    model = yolov3.yolov3(flags.num_classes, anchors)
 
     with tf.Graph().as_default() as graph:
         sess = tf.Session(graph=graph)
