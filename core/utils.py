@@ -350,9 +350,9 @@ def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_cla
 
             k = anchor_mask[l].index(n)
             c = true_labels[t].astype('int32')
-            y_true[l][i, j, k, 0:4] = true_boxes[t, 0:4]
-            y_true[l][i, j, k,   4] = 1
-            y_true[l][i, j, k, 5+c] = 1
+            y_true[l][j, i, k, 0:4] = true_boxes[t, 0:4]
+            y_true[l][j, i, k,   4] = 1
+            y_true[l][j, i, k, 5+c] = 1
 
     return y_true_13, y_true_26, y_true_52
 
