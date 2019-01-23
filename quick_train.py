@@ -82,8 +82,8 @@ for epoch in range(EPOCHS):
     if (epoch+1) % 100 == 0:
         test_rec_value, test_prec_value = utils.evaluate(run_items[1], run_items[2])
         print("\n=======================> evaluation result <================================\n")
-        print("=> EPOCH %10d [TRAIN]:\trecall %.2f \tprecision %.2f" %(epoch+1, train_rec_value, train_prec_value))
-        print("=> EPOCH %10d [VALID]:\trecall %.2f \tprecision %.2f" %(epoch+1, test_rec_value,  test_prec_value))
+        print("=> EPOCH %10d [TRAIN]:\trecall:%7.4f \tprecision:%7.4f" %(epoch+1, train_rec_value, train_prec_value))
+        print("=> EPOCH %10d [VALID]:\trecall:%7.4f \tprecision:%7.4f" %(epoch+1, test_rec_value,  test_prec_value))
         print("\n=======================> evaluation result <================================\n")
 
     writer_test.add_summary(run_items[0], global_step=epoch)
