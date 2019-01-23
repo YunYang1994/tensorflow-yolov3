@@ -64,6 +64,7 @@ toothbrush
 $ sh scripts/make_raccoon_tfrecords.sh
 $ python quick_train.py
 $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
+$ python quick_test.py
 ```
 Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 

@@ -23,7 +23,7 @@ EPOCHS = 1
 # SIZE = [608, 608]
 classes = utils.read_coco_names('./data/raccoon.names')
 num_classes = len(classes)
-image_path = "/home/yang/test/highwaydata/JPEGImages/2018-06-28-13-39/frame_vc0_10056_rcb.jpg"
+image_path = "./raccoon_dataset/images/raccoon-1.jpg"
 img = Image.open(image_path)
 img_resized = np.array(img.resize(size=tuple(SIZE)), dtype=np.float32)
 img_resized = img_resized / 255.
