@@ -59,14 +59,13 @@ toothbrush
 ```
 
 ### 3.1 train raccoon dataset
-[raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data.
+[raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data and train it ! Finally `python quick_test.py1` , here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
 $ python quick_train.py
 $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
 $ python quick_test.py
 ```
-Finally, you need to write a demo script like `nms_demo.py`. Here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 
 ### 3.2 train VOC dataset
 Download VOC-2007 trainval  and test data
