@@ -12,7 +12,7 @@
 #================================================================
 
 import tensorflow as tf
-from core import common, utils
+from core import common
 slim = tf.contrib.slim
 
 class darknet53(object):
@@ -240,10 +240,10 @@ class yolov3(object):
         probs = tf.concat(probs_list, axis=1)
 
         center_x, center_y, width, height = tf.split(boxes, [1,1,1,1], axis=-1)
-        x0 = center_x - width   / 2
-        y0 = center_y - height  / 2
-        x1 = center_x + width   / 2
-        y1 = center_y + height  / 2
+        x0 = center_x - width   / 2.
+        y0 = center_y - height  / 2.
+        x1 = center_x + width   / 2.
+        y1 = center_y + height  / 2.
 
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
         return boxes, confs, probs

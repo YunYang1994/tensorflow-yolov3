@@ -28,11 +28,11 @@ class Parser(object):
         image, gt_boxes = utils.resize_image_correct_bbox(image, gt_boxes, self.image_h, self.image_w)
         if self.debug: return image, gt_boxes
 
-        image = image / 255
         y_true_13, y_true_26, y_true_52 = tf.py_func(self.preprocess_true_boxes, inp=[gt_boxes],
                             Tout = [tf.float32, tf.float32, tf.float32])
         # data augmentation
         # pass
+        image = image / 255.
 
         return image, y_true_13, y_true_26, y_true_52
 
