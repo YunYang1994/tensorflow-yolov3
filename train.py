@@ -17,7 +17,7 @@ from core.dataset import dataset, Parser
 sess = tf.Session()
 
 IMAGE_H, IMAGE_W = 416, 416
-BATCH_SIZE       = 2
+BATCH_SIZE       = 8
 EPOCHS           = 2000*1000
 LR               = 0.0005
 SHUFFLE_SIZE     = 1000

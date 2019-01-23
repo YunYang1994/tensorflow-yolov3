@@ -61,7 +61,6 @@ toothbrush
 ### 3.1 train raccoon dataset
 [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data.
 ```
-$ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/darknet53.conv.74
 $ sh scripts/make_raccoon_tfrecords.sh
 $ python quick_train.py
 $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
