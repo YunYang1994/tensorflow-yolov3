@@ -284,81 +284,6 @@ def load_weights(var_list, weights_file):
     return assign_ops
 
 
-def preprocess_true_boxes(true_boxes, true_labels, input_shape, anchors, num_classes):
-    """
-    Preprocess true boxes to training input format
-    Parameters:
-    -----------
-    :param true_boxes: numpy.ndarray of shape [T, 4]
-                        T: the number of boxes in each image.
-                        4: coordinate => x_min, y_min, x_max, y_max
-    :param true_labels: class id
-    :param input_shape: the shape of input image to the yolov3 network, [416, 416]
-    :param anchors: array, shape=[9,2], 9: the number of anchors, 2: width, height
-    :param num_classes: integer, for coco dataset, it is 80
-    Returns:
-    ----------
-    y_true: list(3 array), shape like yolo_outputs, [13, 13, 3, 85]
-                           13:cell szie, 3:number of anchors
-                           85: box_centers, box_sizes, confidence, probability
-    """
-    input_shape = np.array(input_shape, dtype=np.int32)
-    num_layers = len(anchors) // 3
-    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
-    grid_sizes = [input_shape//32, input_shape//16, input_shape//8]
-
-    box_centers = (true_boxes[:, 0:2] + true_boxes[:, 2:4]) / 2 # the center of box
-    box_sizes =    true_boxes[:, 2:4] - true_boxes[:, 0:2] # the height and width of box
-
-    true_boxes[:, 0:2] = box_centers
-    true_boxes[:, 2:4] = box_sizes
-
-    y_true_13 = np.zeros(shape=[grid_sizes[0][0], grid_sizes[0][1], 3, 5+num_classes], dtype=np.float32)
-    y_true_26 = np.zeros(shape=[grid_sizes[1][0], grid_sizes[1][1], 3, 5+num_classes], dtype=np.float32)
-    y_true_52 = np.zeros(shape=[grid_sizes[2][0], grid_sizes[2][1], 3, 5+num_classes], dtype=np.float32)
-
-    y_true = [y_true_13, y_true_26, y_true_52]
-    anchors_max =  anchors / 2.
-    anchors_min = -anchors_max
-    valid_mask = box_sizes[:, 0] > 0
-
-    # Discard zero rows.
-    wh = box_sizes[valid_mask]
-    # set the center of all boxes as the origin of their coordinates
-    # and correct their coordinates
-    wh = np.expand_dims(wh, -2)
-    boxes_max = wh / 2.
-    boxes_min = -boxes_max
-
-    intersect_mins = np.maximum(boxes_min, anchors_min)
-    intersect_maxs = np.minimum(boxes_max, anchors_max)
-    intersect_wh   = np.maximum(intersect_maxs - intersect_mins, 0.)
-    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
-    box_area = wh[..., 0] * wh[..., 1]
-
-    anchor_area = anchors[:, 0] * anchors[:, 1]
-    iou = intersect_area / (box_area + anchor_area - intersect_area)
-    # Find best anchor for each true box
-    best_anchor = np.argmax(iou, axis=-1)
-
-    for t, n in enumerate(best_anchor):
-        for l in range(num_layers):
-            if n not in anchor_mask[l]: continue
-
-            i = np.floor(true_boxes[t,0]/input_shape[1]*grid_sizes[l][1]).astype('int32')
-            j = np.floor(true_boxes[t,1]/input_shape[0]*grid_sizes[l][0]).astype('int32')
-
-            k = anchor_mask[l].index(n)
-            c = true_labels[t].astype('int32')
-            y_true[l][j, i, k, 0:4] = true_boxes[t, 0:4]
-            y_true[l][j, i, k,   4] = 1.
-            y_true[l][j, i, k, 5+c] = 1.
-
-    return y_true_13, y_true_26, y_true_52
-
-
-
-
 def get_anchors(anchors_path):
     '''loads the anchors from a file'''
     with open(anchors_path) as f:
@@ -366,47 +291,6 @@ def get_anchors(anchors_path):
     anchors = np.array(anchors.split(','), dtype=np.float32)
     return anchors.reshape(-1, 2)
 
-
-class parser(object):
-    def __init__(self, anchors, num_classes, input_shape=[416, 416], debug=False):
-        self.anchors     = anchors
-        self.num_classes = num_classes
-        self.input_shape = input_shape
-        self.debug       = debug
-
-    def preprocess(self, image, true_labels, true_boxes):
-        # resize_image_correct_bbox
-        image, true_boxes = resize_image_correct_bbox(image, true_boxes,
-                                                      input_shape=self.input_shape)
-        if self.debug: return image, true_boxes
-
-        image = image / 255
-        y_true_13, y_true_26, y_true_52 = tf.py_func(preprocess_true_boxes,
-                            inp=[true_boxes, true_labels, self.input_shape, self.anchors, self.num_classes],
-                            Tout = [tf.float32, tf.float32, tf.float32])
-        # data augmentation
-        # pass
-
-        return image, y_true_13, y_true_26, y_true_52
-
-    def parser_example(self, serialized_example):
-
-        features = tf.parse_single_example(
-            serialized_example,
-            features = {
-                'image' : tf.FixedLenFeature([], dtype = tf.string),
-                'bboxes': tf.FixedLenFeature([], dtype = tf.string),
-            }
-        )
-
-        image = tf.image.decode_jpeg(features['image'], channels = 3)
-        image = tf.image.convert_image_dtype(image, tf.uint8)
-
-        true_boxes = tf.decode_raw(features['bboxes'], tf.float32)
-        true_boxes = tf.reshape(true_boxes, shape=[-1,4])
-        true_labels = features['labels'].values
-
-        return self.preprocess(image, true_labels, true_boxes)
 
 def bbox_iou(A, B):
 

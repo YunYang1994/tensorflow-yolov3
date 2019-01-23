@@ -64,9 +64,9 @@ class Parser(object):
         gt_boxes[:, 0:2] = box_centers
         gt_boxes[:, 2:4] = box_sizes
 
-        y_true_13 = np.zeros(shape=[grid_sizes[0][1], grid_sizes[0][0], 3, 5+self.num_classes], dtype=np.float32)
-        y_true_26 = np.zeros(shape=[grid_sizes[1][1], grid_sizes[1][0], 3, 5+self.num_classes], dtype=np.float32)
-        y_true_52 = np.zeros(shape=[grid_sizes[2][1], grid_sizes[2][0], 3, 5+self.num_classes], dtype=np.float32)
+        y_true_13 = np.zeros(shape=[grid_sizes[0][0], grid_sizes[0][1], 3, 5+self.num_classes], dtype=np.float32)
+        y_true_26 = np.zeros(shape=[grid_sizes[1][0], grid_sizes[1][1], 3, 5+self.num_classes], dtype=np.float32)
+        y_true_52 = np.zeros(shape=[grid_sizes[2][0], grid_sizes[2][1], 3, 5+self.num_classes], dtype=np.float32)
 
         y_true = [y_true_13, y_true_26, y_true_52]
         anchors_max =  self.anchors / 2.
