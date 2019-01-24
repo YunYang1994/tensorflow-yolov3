@@ -18,9 +18,8 @@ from PIL import Image
 from core import utils
 
 
-SIZE = [416, 416]
 EPOCHS = 1
-# SIZE = [608, 608]
+SIZE = [608, 608]
 classes = utils.read_coco_names('./data/raccoon.names')
 num_classes = len(classes)
 image_path = "./raccoon_dataset/images/raccoon-1.jpg"
