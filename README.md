@@ -59,7 +59,7 @@ toothbrush
 ```
 
 ### 3.1 train raccoon dataset
-To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data and train it ! Finally `python quick_test.py1` , here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
+To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data and train it ! Finally `python quick_test.py` , here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
 $ python quick_train.py
