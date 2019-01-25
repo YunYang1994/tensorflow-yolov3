@@ -144,6 +144,7 @@ class dataset(object):
         self._TFRecordDataset = self._TFRecordDataset.map(map_func = self.parser.parser_example,
                                                         num_parallel_calls = 10)
         self._TFRecordDataset = self._TFRecordDataset.repeat() if self.repeat else self._TFRecordDataset
+
         if self.shuffle is not None:
             self._TFRecordDataset = self._TFRecordDataset.shuffle(self.shuffle)
 

@@ -335,7 +335,7 @@ def evaluate(y_pred, y_true, iou_thresh=0.5, score_thresh=0.3):
         pred_confs = y_pred[1][i:i+1]
         pred_probs = y_pred[2][i:i+1]
 
-        pred_boxes, pred_confs, pred_labels = cpu_nms(pred_boxes, pred_confs*pred_probs, num_classes,
+        pred_boxes, pred_scores, pred_labels = cpu_nms(pred_boxes, pred_confs*pred_probs, num_classes,
                                                       score_thresh=score_thresh, iou_thresh=iou_thresh)
 
         true_boxes = np.array(true_boxes_list)
@@ -371,4 +371,28 @@ def evaluate(y_pred, y_true, iou_thresh=0.5, score_thresh=0.3):
 
     return recall, precision
 
+def compute_ap(recall, precision):
+    """ Compute the average precision, given the recall and precision curves.
+    Code originally from https://github.com/rbgirshick/py-faster-rcnn.
+    # Arguments
+        recall:    The recall curve (list).
+        precision: The precision curve (list).
+    # Returns
+        The average precision as computed in py-faster-rcnn.
+    """
+    # correct AP calculation
+    # first append sentinel values at the end
+    mrec = np.concatenate(([0.0], recall, [1.0]))
+    mpre = np.concatenate(([0.0], precision, [0.0]))
 
+    # compute the precision envelope
+    for i in range(mpre.size - 1, 0, -1):
+        mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
+
+    # to calculate area under PR curve, look for points
+    # where X axis (recall) changes value
+    i = np.where(mrec[1:] != mrec[:-1])[0]
+
+    # and sum (\Delta recall) * prec
+    ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
+    return ap
