@@ -60,9 +60,15 @@ class parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "--image_size", "-is", default=416, type=int,
-            help="[default: %(default)s] The image size, 416 or 608",
-            metavar="<IS>",
+            "--image_h", "-ih", default=416, type=int,
+            help="[default: %(default)s] The height of image, 416 or 608",
+            metavar="<IH>",
+        )
+
+        self.add_argument(
+            "--image_w", "-iw", default=416, type=int,
+            help="[default: %(default)s] The width of image, 416 or 608",
+            metavar="<IW>",
         )
 
         self.add_argument(
@@ -72,7 +78,7 @@ class parser(argparse.ArgumentParser):
         )
 
         self.add_argument(
-            "--score_threshold", "-st", default=0.3, type=float,
+            "--score_threshold", "-st", default=0.5, type=float,
             help="[default: %(default)s] The score_threshold for gpu nms",
             metavar="<ST>",
         )
@@ -81,14 +87,13 @@ class parser(argparse.ArgumentParser):
 def main(argv):
 
     flags = parser(description="freeze yolov3 graph from checkpoint file").parse_args()
-    SIZE = flags.image_size
-    print("=> the input image size is [%d, %d]" %(SIZE, SIZE))
+    print("=> the input image size is [%d, %d]" %(flags.image_h, flags.image_w))
     anchors = utils.get_anchors(flags.anchors_path)
     model = yolov3.yolov3(flags.num_classes, anchors)
 
     with tf.Graph().as_default() as graph:
         sess = tf.Session(graph=graph)
-        inputs = tf.placeholder(tf.float32, [1, SIZE, SIZE, 3]) # placeholder for detector inputs
+        inputs = tf.placeholder(tf.float32, [1, flags.image_h, flags.image_w, 3]) # placeholder for detector inputs
         print("=>", inputs)
 
         with tf.variable_scope('yolov3'):
