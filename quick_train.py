@@ -24,6 +24,7 @@ SHUFFLE_SIZE     = 200
 CLASSES          = utils.read_coco_names('./data/raccoon.names')
 ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt')
 NUM_CLASSES      = len(CLASSES)
+EVA_INTERNAL     = 100
 
 train_tfrecord   = "./raccoon_dataset/raccoon_train*.tfrecords"
 test_tfrecord    = "./raccoon_dataset/raccoon_test*.tfrecords"
@@ -68,7 +69,7 @@ saver = tf.train.Saver(max_to_keep=2)
 for epoch in range(EPOCHS):
     run_items = sess.run([train_op, write_op, y_pred, y_true] + loss, feed_dict={is_training:True})
 
-    if (epoch+1) % 100 == 0:
+    if (epoch+1) % EVA_INTERNAL == 0:
         train_rec_value, train_prec_value = utils.evaluate(run_items[2], run_items[3])
 
     writer_train.add_summary(run_items[1], global_step=epoch)
@@ -79,7 +80,7 @@ for epoch in range(EPOCHS):
         %(epoch+1, run_items[5], run_items[6], run_items[7], run_items[8]))
 
     run_items = sess.run([write_op, y_pred, y_true] + loss, feed_dict={is_training:False})
-    if (epoch+1) % 100 == 0:
+    if (epoch+1) % EVA_INTERNAL == 0:
         test_rec_value, test_prec_value = utils.evaluate(run_items[1], run_items[2])
         print("\n=======================> evaluation result <================================\n")
         print("=> EPOCH %10d [TRAIN]:\trecall:%7.4f \tprecision:%7.4f" %(epoch+1, train_rec_value, train_prec_value))
