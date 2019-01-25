@@ -248,7 +248,7 @@ class yolov3(object):
         boxes = tf.concat([x0, y0, x1, y1], axis=-1)
         return boxes, confs, probs
 
-    def compute_loss(self, y_pred, y_true, ignore_thresh=0.5, max_box_per_image=8):
+    def compute_loss(self, pred_feature_map, y_true, ignore_thresh=0.5, max_box_per_image=8):
         """
         Note: compute the loss
         Arguments: y_pred, list -> [feature_map_1, feature_map_2, feature_map_3]
@@ -259,8 +259,8 @@ class yolov3(object):
         # total_loss, rec_50, rec_75,  avg_iou    = 0., 0., 0., 0.
         _ANCHORS = [self._ANCHORS[6:9], self._ANCHORS[3:6], self._ANCHORS[0:3]]
 
-        for i in range(len( y_pred )):
-            result = self.loss_layer(y_pred[i], y_true[i], _ANCHORS[i])
+        for i in range(len(pred_feature_map)):
+            result = self.loss_layer(pred_feature_map[i], y_true[i], _ANCHORS[i])
             loss_xy    += result[0]
             loss_wh    += result[1]
             loss_conf  += result[2]

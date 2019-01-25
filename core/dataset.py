@@ -127,11 +127,12 @@ class Parser(object):
         return self.preprocess(image, gt_boxes)
 
 class dataset(object):
-    def __init__(self, parser, tfrecords_path, batch_size, shuffle=None):
+    def __init__(self, parser, tfrecords_path, batch_size, shuffle=None, repeat=True):
         self.parser = parser
         self.filenames = tf.gfile.Glob(tfrecords_path)
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.repeat  = repeat
         self._buildup()
 
     def _buildup(self):
@@ -141,9 +142,11 @@ class dataset(object):
             raise NotImplementedError("No tfrecords found!")
 
         self._TFRecordDataset = self._TFRecordDataset.map(map_func = self.parser.parser_example,
-                                                        num_parallel_calls = 10).repeat()
+                                                        num_parallel_calls = 10)
+        self._TFRecordDataset = self._TFRecordDataset.repeat() if self.repeat else self._TFRecordDataset
         if self.shuffle is not None:
             self._TFRecordDataset = self._TFRecordDataset.shuffle(self.shuffle)
+
         self._TFRecordDataset = self._TFRecordDataset.batch(self.batch_size).prefetch(self.batch_size)
         self._iterator = self._TFRecordDataset.make_one_shot_iterator()
 
