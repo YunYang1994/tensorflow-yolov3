@@ -32,6 +32,7 @@ with tf.Session() as sess:
     while True:
         return_value, frame = vid.read()
         if return_value:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(frame)
         else:
             raise ValueError("No image!")
@@ -50,6 +51,7 @@ with tf.Session() as sess:
         cv2.putText(result, text=info, org=(50, 70), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=1, color=(255, 0, 0), thickness=2)
         cv2.namedWindow("result", cv2.WINDOW_AUTOSIZE)
+        result = cv2.cvtColor(result, cv2.COLOR_RGB2BGR)
         cv2.imshow("result", result)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
 
