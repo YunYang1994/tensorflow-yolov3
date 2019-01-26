@@ -362,12 +362,6 @@ def evaluate(y_pred, y_true, iou_thresh=0.5, score_thresh=0.3):
                 true_positive_dict[true_labels_list[m]] += 1
                 detected.append(m)
 
-        # pred_labels_list = [true_labels_list[m] for m in detected]
-
-        # for c in range(num_classes):
-            # t = true_labels_list.count(c)
-            # p = pred_labels_list.count(c)
-            # true_positive_dict[c] += p if t >= p else t
 
     recall    = sum(true_positive_dict.values()) / (sum(true_labels_dict.values()) + 1e-6)
     precision = sum(true_positive_dict.values()) / (sum(pred_labels_dict.values()) + 1e-6)

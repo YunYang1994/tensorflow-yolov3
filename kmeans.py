@@ -77,7 +77,6 @@ def kmeans(boxes, k, dist=np.median,seed=1):
     return clusters, nearest_clusters, distances
 
 
-
 def parse_anno(annotation_path):
     anno = open(annotation_path, 'r')
     result = []

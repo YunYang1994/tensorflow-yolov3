@@ -133,4 +133,8 @@ for idx in range(NUM_CLASSES):
     print("=> Class %10s - AP: %.4f" %(cls_name, all_aver_precs[cls_name]))
 
 print("=> mAP: %.4f" %(sum(all_aver_precs.values()) / NUM_CLASSES))
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2d9ca54c4d8b4489b48aca5a9c6275f10372e2e0
 
