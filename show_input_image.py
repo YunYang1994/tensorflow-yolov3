@@ -19,16 +19,16 @@ from PIL import Image
 from core.dataset import Parser, dataset
 sess = tf.Session()
 
-INPUT_SIZE = 416
+IMAGE_H, IMAGE_W = 416, 416
 BATCH_SIZE = 1
 SHUFFLE_SIZE = 1
 
-train_tfrecord = "/home/yang/test/COCO/tfrecords/coco_train*.tfrecords"
-anchors        = utils.get_anchors('./data/coco_anchors.txt')
+train_tfrecord = "/home/yang/test/VOC_DATA/train/voc_train.tfrecords"
+anchors        = utils.get_anchors('./data/voc_anchors.txt', IMAGE_H, IMAGE_W)
 classes = utils.read_coco_names('./data/coco.names')
 num_classes = len(classes)
 
-parser   = Parser(416, 416, anchors, num_classes, debug=True)
+parser   = Parser(IMAGE_H, IMAGE_W, anchors, num_classes, debug=True)
 trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=SHUFFLE_SIZE)
 
 is_training = tf.placeholder(tf.bool)
