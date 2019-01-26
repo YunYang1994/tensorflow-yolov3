@@ -18,7 +18,7 @@ sess = tf.Session()
 
 IMAGE_H, IMAGE_W = 416, 416
 BATCH_SIZE       = 8
-EPOCHS           = 10000
+EPOCHS           = 2500
 LR               = 0.001 # if Nan, set 0.0005, 0.0001
 SHUFFLE_SIZE     = 200
 CLASSES          = utils.read_coco_names('./data/raccoon.names')
