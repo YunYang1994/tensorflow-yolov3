@@ -22,10 +22,10 @@ sess = tf.Session()
 
 
 IMAGE_H, IMAGE_W = 416, 416
-CLASSES          = utils.read_coco_names('./data/coco.names')
+CLASSES          = utils.read_coco_names('./data/raccoon.names')
 NUM_CLASSES      = len(CLASSES)
-ANCHORS          = utils.get_anchors('./data/coco_anchors.txt')
-CKPT_FILE        = "./checkpoint/yolov3.ckpt"
+ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
+CKPT_FILE        = "./checkpoint/yolov3.ckpt-1500"
 IOU_THRESH       = 0.5
 SCORE_THRESH     = 0.3
 
@@ -33,7 +33,7 @@ all_detections   = []
 all_annotations  = []
 all_aver_precs   = {CLASSES[i]:0. for i in range(NUM_CLASSES)}
 
-test_tfrecord    = "/home/yang/test/COCO/tfrecords/coco_train0000.tfrecords"
+test_tfrecord    = "./raccoon_dataset/raccoon_train.tfrecords"
 parser           = Parser(IMAGE_H, IMAGE_W, ANCHORS, NUM_CLASSES)
 testset          = dataset(parser, test_tfrecord , batch_size=1, shuffle=None, repeat=False)
 
@@ -132,5 +132,5 @@ for idx in range(NUM_CLASSES):
     cls_name = CLASSES[idx]
     print("=> Class %10s - AP: %.4f" %(cls_name, all_aver_precs[cls_name]))
 
-print("=> mAP: %.4f" %(all_aver_precs.values() / NUM_CLASSES))
+print("=> mAP: %.4f" %(sum(all_aver_precs.values()) / NUM_CLASSES))
 

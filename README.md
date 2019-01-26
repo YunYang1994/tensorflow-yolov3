@@ -62,9 +62,15 @@ toothbrush
 To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class, I have prepared a shell script in the '`./scripts` which enables you to get data and train it ! Finally `python quick_test.py` , here I strongly recommend you to set `iou_thresh = 0.5, score_thresh=0.3`.
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
+$ python kmeans.py        # get prior anchors
 $ python quick_train.py
+$ tensorboard --logdir ./data
+```
+As you can see in the tensorboard, if your dataset is too small or you train for too long, the model start to overfit and learn patterns from training data that don't generalize to the test data. Now you can test it!
+```
 $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
 $ python quick_test.py
+$ python evaluate.py
 ```
 
 ### 3.2 train VOC dataset

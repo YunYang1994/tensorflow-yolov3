@@ -16,12 +16,13 @@ import os
 import argparse
 import xml.etree.ElementTree as ET
 
-sets=[('2007', 'train'), ('2007', 'val'), ('2007', 'test')]
+# sets=[('2007', 'train'), ('2007', 'val'), ('2007', 'test')]
+sets=[('2012', 'train'), ('2012', 'val')]
 
 classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--voc_path", default="/home/yang/test/VOC/train/")
+parser.add_argument("--voc_path", default="/home/yang/test/VOCdevkit/train/")
 parser.add_argument("--dataset_info_path", default="./")
 flags = parser.parse_args()
 

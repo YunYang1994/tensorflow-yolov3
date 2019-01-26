@@ -18,7 +18,7 @@ from collections import Counter
 from PIL import ImageFont, ImageDraw
 
 # Discard all boxes with low scores and high IOU
-def gpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thresh=0.5):
+def gpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.3, iou_thresh=0.5):
     """
     /*----------------------------------- NMS on gpu ---------------------------------------*/
 
@@ -104,7 +104,7 @@ def py_nms(boxes, scores, max_boxes=50, iou_thresh=0.5):
 
     return keep[:max_boxes]
 
-def cpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.4, iou_thresh=0.5):
+def cpu_nms(boxes, scores, num_classes, max_boxes=50, score_thresh=0.3, iou_thresh=0.5):
     """
     /*----------------------------------- NMS on cpu ---------------------------------------*/
     Arguments:
@@ -284,12 +284,15 @@ def load_weights(var_list, weights_file):
     return assign_ops
 
 
-def get_anchors(anchors_path):
+def get_anchors(anchors_path, image_h, image_w):
     '''loads the anchors from a file'''
     with open(anchors_path) as f:
         anchors = f.readline()
-    anchors = np.array(anchors.split(','), dtype=np.float32)
-    return anchors.reshape(-1, 2)
+    anchors = np.array(anchors.split(), dtype=np.float32)
+    anchors = anchors.reshape(-1,2)
+    anchors[:, 1] = anchors[:, 1] * image_h
+    anchors[:, 0] = anchors[:, 0] * image_w
+    return anchors.astype(np.int32)
 
 
 def bbox_iou(A, B):
@@ -351,20 +354,20 @@ def evaluate(y_pred, y_true, iou_thresh=0.5, score_thresh=0.3):
             continue
 
         detected = []
-        for k in range(len(true_labels_list)):
+        for k in range(len(pred_labels_list)):
             # compute iou between predicted box and ground_truth boxes
-            iou = bbox_iou(true_boxes[k:k+1], pred_boxes)
+            iou = bbox_iou(pred_boxes[k:k+1], true_boxes)
             m = np.argmax(iou) # Extract index of largest overlap
-            if iou[m] >= iou_thresh and true_labels_list[k] == pred_labels_list[m] and m not in detected:
-                # pred_labels_dict[true_labels_list[k]] += 1
+            if iou[m] >= iou_thresh and pred_labels_list[k] == true_labels_list[m] and m not in detected:
+                true_positive_dict[true_labels_list[m]] += 1
                 detected.append(m)
 
-        pred_labels_list = [pred_labels_list[m] for m in detected]
+        # pred_labels_list = [true_labels_list[m] for m in detected]
 
-        for c in range(num_classes):
-            t = true_labels_list.count(c)
-            p = pred_labels_list.count(c)
-            true_positive_dict[c] += p if t >= p else t
+        # for c in range(num_classes):
+            # t = true_labels_list.count(c)
+            # p = pred_labels_list.count(c)
+            # true_positive_dict[c] += p if t >= p else t
 
     recall    = sum(true_positive_dict.values()) / (sum(true_labels_dict.values()) + 1e-6)
     precision = sum(true_positive_dict.values()) / (sum(pred_labels_dict.values()) + 1e-6)

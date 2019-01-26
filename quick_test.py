@@ -19,10 +19,10 @@ from core import utils
 
 
 EPOCHS = 1
-SIZE = [608, 608]
+SIZE = [416, 416]
 classes = utils.read_coco_names('./data/raccoon.names')
 num_classes = len(classes)
-image_path = "./raccoon_dataset/images/raccoon-1.jpg"
+image_path = "./raccoon_dataset/images/raccoon-182.jpg"  # 181,
 img = Image.open(image_path)
 img_resized = np.array(img.resize(size=tuple(SIZE)), dtype=np.float32)
 img_resized = img_resized / 255.

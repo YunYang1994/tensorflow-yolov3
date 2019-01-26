@@ -16,18 +16,18 @@ from core import utils, yolov3
 from core.dataset import dataset, Parser
 sess = tf.Session()
 
-IMAGE_H, IMAGE_W = 608, 608
+IMAGE_H, IMAGE_W = 416, 416
 BATCH_SIZE       = 8
 EPOCHS           = 10000
 LR               = 0.001
 SHUFFLE_SIZE     = 200
 CLASSES          = utils.read_coco_names('./data/raccoon.names')
-ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt')
+ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
 NUM_CLASSES      = len(CLASSES)
 EVA_INTERNAL     = 100
 
-train_tfrecord   = "./raccoon_dataset/raccoon_train*.tfrecords"
-test_tfrecord    = "./raccoon_dataset/raccoon_test*.tfrecords"
+train_tfrecord   = "./raccoon_dataset/raccoon_train.tfrecords"
+test_tfrecord    = "./raccoon_dataset/raccoon_test.tfrecords"
 
 parser   = Parser(IMAGE_H, IMAGE_W, ANCHORS, NUM_CLASSES)
 trainset = dataset(parser, train_tfrecord, BATCH_SIZE, shuffle=SHUFFLE_SIZE)
