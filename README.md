@@ -73,7 +73,7 @@ As you can see in the tensorboard, if your dataset is too small or you train for
 
 #### how to test and evaluate it ?
 ```
-$ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-epoch -nc 1 -ap ./data/raccoon_anchors.txt --freeze
+$ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-2500 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
 $ python quick_test.py
 $ python evaluate.py
 ```
