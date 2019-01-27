@@ -73,50 +73,18 @@ $ python quick_test.py
 $ python evaluate.py
 ```
 
-### 3.2 train VOC dataset
+### 3.2 train other dataset
 Download VOC-2007 trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
 ```
-Then you need to edit your VOC dataset path in `make_voc_tfrecords.sh`. In this step, you will extract some useful information such as bounding box, category id .etc from VOC dataset and convert them into some `.tfrecord`
+Download COCO trainval  and test data
 ```
-$ sh scripts/make_voc_tfrecords.sh
-$ python show_input_image.py   # show your input image (optional)
-$ python train.py
-```
-
-### 3.4 train coco dataset
-Firstly, you need to download the COCO2017 dataset from the [website](http://cocodataset.org/)　
-```bashrc
 $ wget http://images.cocodataset.org/zips/train2017.zip
-$ unzip train2017.zip
 $ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-$ unzip annotations_trainval2017.zip
-```
-Then you are supposed to extract some useful information such as bounding box, category id .etc from COCO dataset and generate your own `.txt` file.
-```
-$ python scripts/extract_coco.py -h
-```
-As a result, you will get  `train2017.txt`.  Here is an example row for one image:<br>
-```
-/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94 20 
-/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 55.38 132.63 519.84 380.4 16
-# image_path, x_min, y_min, x_max, y_max, category_id,  x_min, y_min, ... category_id, 
-```
-In this step, you will convert image dataset into some `.tfrecord`  which are a kind of recommended file format for Tensorflow to store your data as  binary file. Finally, you can train it now!
-```
-$ python core/convert_tfrecord.py -h
-$ python train.py
-```
-Take [yolov2](https://github.com/YunYang1994/tensorflow-yolov2_from_scratch) training process for example, 
-![image](./docs/images/yolov2_loss.png)
-### 3.4 evaluate coco dataset
-```
 $ wget http://images.cocodataset.org/zips/test2017.zip
 $ wget http://images.cocodataset.org/annotations/image_info_test2017.zip 
-$ unzip test2017.zip
-$ unzip image_info_test2017.zip
 ```
 
 ## part 4. Why it is so magical ?
