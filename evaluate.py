@@ -22,10 +22,10 @@ sess = tf.Session()
 
 
 IMAGE_H, IMAGE_W = 416, 416
-CLASSES          = utils.read_coco_names('./data/raccoon.names')
+CLASSES          = utils.read_coco_names('./data/voc.names')
 NUM_CLASSES      = len(CLASSES)
-ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
-CKPT_FILE        = "./checkpoint/yolov3.ckpt-2500"
+ANCHORS          = utils.get_anchors('./data/voc_anchors.txt', IMAGE_H, IMAGE_W)
+CKPT_FILE        = "./checkpoint/yolov3.ckpt-107000"
 IOU_THRESH       = 0.5
 SCORE_THRESH     = 0.3
 
@@ -33,7 +33,7 @@ all_detections   = []
 all_annotations  = []
 all_aver_precs   = {CLASSES[i]:0. for i in range(NUM_CLASSES)}
 
-test_tfrecord    = "./raccoon_dataset/raccoon_test.tfrecords"
+test_tfrecord    = "/home/yang/test/VOC_DATA/test/voc_test.tfrecords"
 parser           = Parser(IMAGE_H, IMAGE_W, ANCHORS, NUM_CLASSES)
 testset          = dataset(parser, test_tfrecord , batch_size=1, shuffle=None, repeat=False)
 
@@ -99,14 +99,16 @@ for idx in range(NUM_CLASSES):
         pred_boxes, pred_scores, pred_labels_list = all_detections[i]
         true_boxes, true_labels_list              = all_annotations[i]
         detected                                  = []
+        num_annotations                          += true_labels_list.count(idx)
 
         for k in range(len(pred_labels_list)):
+            if pred_labels_list[k] != idx: continue
+
             scores.append(pred_scores[k])
             ious = utils.bbox_iou(pred_boxes[k:k+1], true_boxes)
             m    = np.argmax(ious)
-            if ious[m] > IOU_THRESH and pred_labels_list[k] == true_labels_list[m] == idx and m not in detected:
+            if ious[m] > IOU_THRESH and pred_labels_list[k] == true_labels_list[m] and m not in detected:
                 detected.append(m)
-                num_annotations += 1
                 true_positives.append(1)
             else:
                 true_positives.append(0)
@@ -133,4 +135,6 @@ for idx in range(NUM_CLASSES):
     print("=> Class %10s - AP: %.4f" %(cls_name, all_aver_precs[cls_name]))
 
 print("=> mAP: %.4f" %(sum(all_aver_precs.values()) / NUM_CLASSES))
+
+
 
