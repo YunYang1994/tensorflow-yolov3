@@ -95,7 +95,7 @@ for idx in range(NUM_CLASSES):
     scores = []
     num_annotations = 0
 
-    for i in tqdm(range(len(all_annotations)), desc="Computing AP for class %10s" %(CLASSES[idx])):
+    for i in tqdm(range(len(all_annotations)), desc="Computing AP for class %12s" %(CLASSES[idx])):
         pred_boxes, pred_scores, pred_labels_list = all_detections[i]
         true_boxes, true_labels_list              = all_annotations[i]
         detected                                  = []
