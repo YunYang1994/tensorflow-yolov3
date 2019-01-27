@@ -79,6 +79,10 @@ $ python evaluate.py
 ```
 if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
 
+|raccoon-182.jpg|raccoon-182.jpg|
+|---|:---:|
+|![weibo-logo](./docs/images/raccoon1.jpg)|![weibo-logo](./docs/images/raccoon2.jpg)|
+
 ### 3.2 train other dataset
 Download VOC-2007 trainval  and test data
 ```bashrc
