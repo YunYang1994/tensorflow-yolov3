@@ -23,9 +23,9 @@ IMAGE_H, IMAGE_W = 416, 416
 BATCH_SIZE = 1
 SHUFFLE_SIZE = 1
 
-train_tfrecord = "/home/yang/test/VOC_DATA/train/voc_train.tfrecords"
-anchors        = utils.get_anchors('./data/voc_anchors.txt', IMAGE_H, IMAGE_W)
-classes = utils.read_coco_names('./data/voc.names')
+train_tfrecord = "./raccoon_dataset/raccoon_*.tfrecords"
+anchors        = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
+classes = utils.read_coco_names('./data/raccoon.names')
 num_classes = len(classes)
 
 parser   = Parser(IMAGE_H, IMAGE_W, anchors, num_classes, debug=True)

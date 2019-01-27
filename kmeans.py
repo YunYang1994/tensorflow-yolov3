@@ -117,7 +117,7 @@ def plot_cluster_result(clusters,nearest_clusters,WithinClusterSumDist,wh,k):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_txt", type=str, default="./raccoon_dataset/labels.txt")
+    parser.add_argument("--dataset_txt", type=str, default="./raccoon_dataset/train.txt")
     parser.add_argument("--anchors_txt", type=str, default="./data/raccoon_anchors.txt")
     parser.add_argument("--cluster_num", type=int, default=9)
     args = parser.parse_args()

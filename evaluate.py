@@ -22,10 +22,10 @@ sess = tf.Session()
 
 
 IMAGE_H, IMAGE_W = 416, 416
-CLASSES          = utils.read_coco_names('./data/voc.names')
+CLASSES          = utils.read_coco_names('./data/raccoon.names')
 NUM_CLASSES      = len(CLASSES)
-ANCHORS          = utils.get_anchors('./data/voc_anchors.txt', IMAGE_H, IMAGE_W)
-CKPT_FILE        = "./checkpoint/yolov3.ckpt-107000"
+ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
+CKPT_FILE        = "./checkpoint/yolov3.ckpt-2500"
 IOU_THRESH       = 0.5
 SCORE_THRESH     = 0.3
 
@@ -33,7 +33,7 @@ all_detections   = []
 all_annotations  = []
 all_aver_precs   = {CLASSES[i]:0. for i in range(NUM_CLASSES)}
 
-test_tfrecord    = "/home/yang/test/VOC_DATA/test/voc_test.tfrecords"
+test_tfrecord    = "./raccoon_dataset/raccoon_*.tfrecords"
 parser           = Parser(IMAGE_H, IMAGE_W, ANCHORS, NUM_CLASSES)
 testset          = dataset(parser, test_tfrecord , batch_size=1, shuffle=None, repeat=False)
 

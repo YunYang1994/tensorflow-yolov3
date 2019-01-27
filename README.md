@@ -38,9 +38,9 @@ Three files are required as follows:
 - `dataset.txt`: 
 
 ```
-/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000458533.jpg 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94 20 
-/home/yang/test/tensorflow-yolov3/data/train_data/train2017/000000514915.jpg 55.38 132.63 519.84 380.4 16
-# image_path, x_min, y_min, x_max, y_max, category_id,  x_min, y_min, ... category_id, 
+xxx/xxx.jpg 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94 20 
+xxx/xxx.jpg 55.38 132.63 519.84 380.4 16
+# image_path x_min y_min x_max y_max class_id  x_min y_min ... class_id 
 ```
 - `anchors.txt`
 
@@ -64,7 +64,8 @@ To help you understand my training process, I made this training-pipline demo. [
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
 $ python show_input_image.py               # show your input image (optional)
-$ python kmeans.py                         # get prior anchors
+$ python kmeans.py                         # get prior anchors and rescale the values to the range [0,1]
+$ python convert_weight.py --convert       # get pretrained weights
 $ python quick_train.py
 $ tensorboard --logdir ./data
 ```
@@ -72,7 +73,7 @@ As you can see in the tensorboard, if your dataset is too small or you train for
 
 #### how to test and evaluate it ?
 ```
-$ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-19000 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
+$ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-epoch -nc 1 -ap ./data/raccoon_anchors.txt --freeze
 $ python quick_test.py
 $ python evaluate.py
 ```
