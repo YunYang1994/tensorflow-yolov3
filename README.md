@@ -63,7 +63,8 @@ To help you understand my training process, I made this training-pipline demo. [
 #### how to train it ?
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
-$ python kmeans.py        # get prior anchors
+$ python show_input_image.py               # show your input image (optional)
+$ python kmeans.py                         # get prior anchors
 $ python quick_train.py
 $ tensorboard --logdir ./data
 ```
