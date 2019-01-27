@@ -77,6 +77,7 @@ $ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-2500 -nc 1 -ap ./data/ra
 $ python quick_test.py
 $ python evaluate.py
 ```
+if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) us here to discuss with us.
 
 ### 3.2 train other dataset
 Download VOC-2007 trainval  and test data
