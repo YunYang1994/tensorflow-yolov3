@@ -69,7 +69,7 @@ $ python convert_weight.py --convert       # get pretrained weights
 $ python quick_train.py
 $ tensorboard --logdir ./data
 ```
-As you can see in the tensorboard, if your dataset is too small or you train for too long, the model starts to overfit and learn patterns from training data that don't generalize to the test data.
+As you can see in the tensorboard, if your dataset is too small or you train for too long, the model starts to overfit and learn patterns from training data that does not generalize to the test data.
 
 #### how to test and evaluate it ?
 ```
