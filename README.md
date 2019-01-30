@@ -58,7 +58,7 @@ toothbrush
 ```
 
 ### 3.1 train raccoon dataset
-To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class with 200 images, I have prepared a shell script in the `./scripts` which enables you to get data and train it !
+To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class with 200 images (180 for train, 20 for test), I have prepared a shell script in the `./scripts` which enables you to get data and train it !
 #### how to train it ?
 ```
 $ sh scripts/make_raccoon_tfrecords.sh
