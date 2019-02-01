@@ -109,7 +109,7 @@ In this project, I use the pretrained weights, where we have 80 trained yolo cla
 
 ### 4.3 Neural network io:
 -  **input** : [None, 416, 416, 3]
--  **output** : confidece of an object being present in the rectangle, list of rectangles position and sizes and classes of the objects begin detected. Each bounding box is represented by 6 numbers `(Rx, Ry, Rw, Rh, Pc, C1..Cn)` as explained above. In this case n=80, which means we have `c` as 80-dimensional vector, and the final size of representing the bounding box is 85.The first number `Pc` is the confidence of an project, The second four number `bx, by, bh, bw` represents the information of bounding boxes. The last 80 number each is the output probability of corresponding-index class.
+-  **output** : confidece of an object being present in the rectangle, list of rectangles position and sizes and classes of the objects begin detected. Each bounding box is represented by 6 numbers `(Rx, Ry, Rw, Rh, Pc, C1..Cn)` as explained above. In this case n=80, which means we have `c` as 80-dimensional vector, and the final size of representing the bounding box is 85.The first number `Pc` is the confidence of an project, The second four number `bx, by, bw, bh` represents the information of bounding boxes. The last 80 number each is the output probability of corresponding-index class.
 
 ### 4.4 Filtering with score threshold
 
