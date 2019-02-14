@@ -83,9 +83,10 @@ if you are still unfamiliar with training pipline, you can join [here](https://g
 |![weibo-logo](./docs/images/raccoon1.jpg)|![weibo-logo](./docs/images/raccoon2.jpg)|
 
 ### 3.2 train other dataset
-Download VOC-2007 trainval  and test data
+Download VOC PASCAL trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+$ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
 ```
 Download COCO trainval  and test data
