@@ -150,7 +150,7 @@ Non-max suppression uses the very important function called **"Intersection over
 
 Hope it helps you, Start your tensorflow-yolv3 journey here now!
 
-## part 5. Some Other Tutorials
+## part 5. Other Implementations
 
 [- **`YOLOv3_TensorFlow`**](https://github.com/wizyoung/YOLOv3_TensorFlow)
 
