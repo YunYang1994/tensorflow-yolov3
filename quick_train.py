@@ -27,6 +27,7 @@ CLASSES          = utils.read_coco_names('./data/raccoon.names')
 ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
 NUM_CLASSES      = len(CLASSES)
 EVAL_INTERNAL    = 100
+SAVE_INTERNAL    = 500
 
 train_tfrecord   = "./raccoon_dataset/raccoon_train.tfrecords"
 test_tfrecord    = "./raccoon_dataset/raccoon_test.tfrecords"
@@ -78,7 +79,7 @@ for epoch in range(EPOCHS):
 
     writer_train.add_summary(run_items[1], global_step=epoch)
     writer_train.flush() # Flushes the event file to disk
-    if (epoch+1) % 500 == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch+1)
+    if (epoch+1) % SAVE_INTERNAL == 0: saver.save(sess, save_path="./checkpoint/yolov3.ckpt", global_step=epoch+1)
 
     print("=> EPOCH %10d [TRAIN]:\tloss_xy:%7.4f \tloss_wh:%7.4f \tloss_conf:%7.4f \tloss_class:%7.4f"
         %(epoch+1, run_items[5], run_items[6], run_items[7], run_items[8]))
