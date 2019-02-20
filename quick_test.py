@@ -22,7 +22,7 @@ classes = utils.read_coco_names('./data/raccoon.names')
 num_classes = len(classes)
 image_path = "./raccoon_dataset/images/raccoon-182.jpg"  # 181,
 img = Image.open(image_path)
-img_resized = np.array(img.resize(size=(IMAGE_H, IMAGE_W)), dtype=np.float32)
+img_resized = np.array(img.resize(size=(IMAGE_W, IMAGE_H)), dtype=np.float32)
 img_resized = img_resized / 255.
 cpu_nms_graph = tf.Graph()
 
