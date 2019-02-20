@@ -49,7 +49,7 @@ class Parser(object):
 
         gaussian_blur = lambda image: cv2.GaussianBlur(image, (5, 5), 0)
         h, w = image.shape.as_list()[:2]
-        image = tf.py_func(gaussian_blur, [image], tf.float32)
+        image = tf.py_func(gaussian_blur, [image], tf.uint8)
         image.set_shape([h, w, 3])
 
         return image, gt_boxes
@@ -82,15 +82,17 @@ class Parser(object):
 
     def preprocess(self, image, gt_boxes):
 
+        ################################# data augmentation ##################################
+        # data_aug_flag = tf.to_int32(tf.random_uniform(shape=[], minval=-5, maxval=5))
+
+        # caseO = tf.equal(data_aug_flag, 1), lambda: self.flip_left_right(image, gt_boxes)
+        # case1 = tf.equal(data_aug_flag, 2), lambda: self.random_distort_color(image, gt_boxes)
+        # case2 = tf.equal(data_aug_flag, 3), lambda: self.random_blur(image, gt_boxes)
+        # case3 = tf.equal(data_aug_flag, 4), lambda: self.random_crop(image, gt_boxes)
+
+        # image, gt_boxes = tf.case([caseO, case1, case2, case3], lambda: (image, gt_boxes))
+
         image, gt_boxes = utils.resize_image_correct_bbox(image, gt_boxes, self.image_h, self.image_w)
-
-        data_aug_flag = tf.to_int32(tf.random_uniform(shape=[], minval=-5, maxval=5))
-
-        image, gt_boxes = tf.case(pred_fn_pairs={tf.less_equal(data_aug_flag, 0): lambda: (image, gt_boxes),
-                        tf.equal(data_aug_flag, 1): lambda: self.flip_left_right(image, gt_boxes),
-                        tf.equal(data_aug_flag, 2): lambda: self.random_distort_color(image, gt_boxes),
-                        tf.equal(data_aug_flag, 3): lambda: self.random_blur(image, gt_boxes),
-                        tf.equal(data_aug_flag, 4): lambda: self.random_crop(image, gt_boxes)}, name="data_augmentation")
 
         if self.debug: return image, gt_boxes
 
