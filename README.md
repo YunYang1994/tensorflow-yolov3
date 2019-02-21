@@ -148,7 +148,7 @@ Non-max suppression uses the very important function called **"Intersection over
 
 ![image](./docs/images/iou.png)
 
-Hope it helps you, Start your tensorflow-yolv3 journey here now!
+Welecome to discuss with me.
 
 ## part 5. Other Implementations
 
