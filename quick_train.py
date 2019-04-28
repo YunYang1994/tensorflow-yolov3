@@ -67,7 +67,10 @@ update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
     train_op = optimizer.minimize(loss[0], var_list=update_vars, global_step=global_step)
 
-sess.run([tf.global_variables_initializer(), tf.local_variables_initializer()])
+if(tf.__version__.startswith("0.") and int(tf.__version__.split(".")[1])<12):
+    sess.run([tf.initialize_all_variables(), tf.initialize_local_variables()])
+else: 
+    sess.run([tf.global_variables_initializer(), tf.local_variables_initializer()])
 saver_to_restore.restore(sess, "./checkpoint/yolov3.ckpt")
 saver = tf.train.Saver(max_to_keep=2)
 
