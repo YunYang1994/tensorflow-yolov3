@@ -148,7 +148,7 @@ Non-max suppression uses the very important function called **"Intersection over
 
 ![image](./docs/images/iou.png)
 
-Welecome to discuss with me.
+Welcome to discuss with me.
 
 ## part 5. Other Implementations
 
