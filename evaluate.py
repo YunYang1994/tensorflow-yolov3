@@ -1,140 +1,165 @@
 #! /usr/bin/env python
 # coding=utf-8
 #================================================================
-#   Copyright (C) 2018 * Ltd. All rights reserved.
+#   Copyright (C) 2019 * Ltd. All rights reserved.
 #
 #   Editor      : VIM
 #   File name   : evaluate.py
 #   Author      : YunYang1994
-#   Created date: 2018-12-20 11:58:21
-#   Description : compute mAP
+#   Created date: 2019-02-21 15:30:26
+#   Description :
 #
 #================================================================
 
-import sys
+import cv2
+import os
+import shutil
 import numpy as np
 import tensorflow as tf
-from tqdm import tqdm
-from PIL import Image
-from core import utils, yolov3
-from core.dataset import dataset, Parser
-sess = tf.Session()
+import core.utils as utils
+from core.config import cfg
+from core.yolov3 import YOLOV3
+
+class YoloTest(object):
+    def __init__(self):
+        self.input_size       = cfg.TEST.INPUT_SIZE
+        self.anchor_per_scale = cfg.YOLO.ANCHOR_PER_SCALE
+        self.classes          = utils.read_class_names(cfg.YOLO.CLASSES)
+        self.num_classes      = len(self.classes)
+        self.anchors          = np.array(utils.get_anchors(cfg.YOLO.ANCHORS))
+        self.score_threshold  = cfg.TEST.SCORE_THRESHOLD
+        self.iou_threshold    = cfg.TEST.IOU_THRESHOLD
+        self.moving_ave_decay = cfg.YOLO.MOVING_AVE_DECAY
+        self.annotation_path  = cfg.TEST.ANNOT_PATH
+        self.weight_file      = cfg.TEST.WEIGHT_FILE
+        self.write_image      = cfg.TEST.WRITE_IMAGE
+        self.write_image_path = cfg.TEST.WRITE_IMAGE_PATH
+        self.show_label       = cfg.TEST.SHOW_LABEL
+
+        with tf.name_scope('input'):
+            self.input_data = tf.placeholder(dtype=tf.float32, name='input_data')
+            self.trainable  = tf.placeholder(dtype=tf.bool,    name='trainable')
+
+        model = YOLOV3(self.input_data, self.trainable)
+        self.pred_sbbox, self.pred_mbbox, self.pred_lbbox = model.pred_sbbox, model.pred_mbbox, model.pred_lbbox
+
+        with tf.name_scope('ema'):
+            ema_obj = tf.train.ExponentialMovingAverage(self.moving_ave_decay)
+
+        self.sess  = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+        self.saver = tf.train.Saver(ema_obj.variables_to_restore())
+        self.saver.restore(self.sess, self.weight_file)
+
+    def predict(self, image):
+
+        org_image = np.copy(image)
+        org_h, org_w, _ = org_image.shape
+
+        image_data = utils.image_preporcess(image, [self.input_size, self.input_size])
+        image_data = image_data[np.newaxis, ...]
+
+        pred_sbbox, pred_mbbox, pred_lbbox = self.sess.run(
+            [self.pred_sbbox, self.pred_mbbox, self.pred_lbbox],
+            feed_dict={
+                self.input_data: image_data,
+                self.trainable: False
+            }
+        )
+
+        pred_bbox = np.concatenate([np.reshape(pred_sbbox, (-1, 5 + self.num_classes)),
+                                    np.reshape(pred_mbbox, (-1, 5 + self.num_classes)),
+                                    np.reshape(pred_lbbox, (-1, 5 + self.num_classes))], axis=0)
+        bboxes = utils.postprocess_boxes(pred_bbox, (org_h, org_w), self.input_size, self.score_threshold)
+        bboxes = utils.nms(bboxes, self.iou_threshold)
+
+        return bboxes
+
+    def evaluate(self):
+        predicted_dir_path = './mAP/predicted'
+        ground_truth_dir_path = './mAP/ground-truth'
+        if os.path.exists(predicted_dir_path): shutil.rmtree(predicted_dir_path)
+        if os.path.exists(ground_truth_dir_path): shutil.rmtree(ground_truth_dir_path)
+        if os.path.exists(self.write_image_path): shutil.rmtree(self.write_image_path)
+        os.mkdir(predicted_dir_path)
+        os.mkdir(ground_truth_dir_path)
+        os.mkdir(self.write_image_path)
+
+        with open(self.annotation_path, 'r') as annotation_file:
+            for num, line in enumerate(annotation_file):
+                annotation = line.strip().split()
+                image_path = annotation[0]
+                image_name = image_path.split('/')[-1]
+                image = cv2.imread(image_path)
+                bbox_data_gt = np.array([list(map(int, box.split(','))) for box in annotation[1:]])
+
+                if len(bbox_data_gt) == 0:
+                    bboxes_gt=[]
+                    classes_gt=[]
+                else:
+                    bboxes_gt, classes_gt = bbox_data_gt[:, :4], bbox_data_gt[:, 4]
+                ground_truth_path = os.path.join(ground_truth_dir_path, str(num) + '.txt')
+
+                print('=> ground truth of %s:' % image_name)
+                num_bbox_gt = len(bboxes_gt)
+                with open(ground_truth_path, 'w') as f:
+                    for i in range(num_bbox_gt):
+                        class_name = self.classes[classes_gt[i]]
+                        xmin, ymin, xmax, ymax = list(map(str, bboxes_gt[i]))
+                        bbox_mess = ' '.join([class_name, xmin, ymin, xmax, ymax]) + '\n'
+                        f.write(bbox_mess)
+                        print('\t' + str(bbox_mess).strip())
+                print('=> predict result of %s:' % image_name)
+                predict_result_path = os.path.join(predicted_dir_path, str(num) + '.txt')
+                bboxes_pr = self.predict(image)
+
+                if self.write_image:
+                    image = utils.draw_bbox(image, bboxes_pr, show_label=self.show_label)
+                    cv2.imwrite(self.write_image_path+image_name, image)
+
+                with open(predict_result_path, 'w') as f:
+                    for bbox in bboxes_pr:
+                        coor = np.array(bbox[:4], dtype=np.int32)
+                        score = bbox[4]
+                        class_ind = int(bbox[5])
+                        class_name = self.classes[class_ind]
+                        score = '%.4f' % score
+                        xmin, ymin, xmax, ymax = list(map(str, coor))
+                        bbox_mess = ' '.join([class_name, score, xmin, ymin, xmax, ymax]) + '\n'
+                        f.write(bbox_mess)
+                        print('\t' + str(bbox_mess).strip())
+
+    def voc_2012_test(self, voc2012_test_path):
+
+        img_inds_file = os.path.join(voc2012_test_path, 'ImageSets', 'Main', 'test.txt')
+        with open(img_inds_file, 'r') as f:
+            txt = f.readlines()
+            image_inds = [line.strip() for line in txt]
+
+        results_path = 'results/VOC2012/Main'
+        if os.path.exists(results_path):
+            shutil.rmtree(results_path)
+        os.makedirs(results_path)
+
+        for image_ind in image_inds:
+            image_path = os.path.join(voc2012_test_path, 'JPEGImages', image_ind + '.jpg')
+            image = cv2.imread(image_path)
+
+            print('predict result of %s:' % image_ind)
+            bboxes_pr = self.predict(image)
+            for bbox in bboxes_pr:
+                coor = np.array(bbox[:4], dtype=np.int32)
+                score = bbox[4]
+                class_ind = int(bbox[5])
+                class_name = self.classes[class_ind]
+                score = '%.4f' % score
+                xmin, ymin, xmax, ymax = list(map(str, coor))
+                bbox_mess = ' '.join([image_ind, score, xmin, ymin, xmax, ymax]) + '\n'
+                with open(os.path.join(results_path, 'comp4_det_test_' + class_name + '.txt'), 'a') as f:
+                    f.write(bbox_mess)
+                print('\t' + str(bbox_mess).strip())
 
 
-IMAGE_H, IMAGE_W = 416, 416
-CLASSES          = utils.read_coco_names('./data/raccoon.names')
-NUM_CLASSES      = len(CLASSES)
-ANCHORS          = utils.get_anchors('./data/raccoon_anchors.txt', IMAGE_H, IMAGE_W)
-CKPT_FILE        = "./checkpoint/yolov3.ckpt-2500"
-IOU_THRESH       = 0.5
-SCORE_THRESH     = 0.3
-
-all_detections   = []
-all_annotations  = []
-all_aver_precs   = {CLASSES[i]:0. for i in range(NUM_CLASSES)}
-
-test_tfrecord    = "./raccoon_dataset/raccoon_*.tfrecords"
-parser           = Parser(IMAGE_H, IMAGE_W, ANCHORS, NUM_CLASSES)
-testset          = dataset(parser, test_tfrecord , batch_size=1, shuffle=None, repeat=False)
-
-
-images_tensor, *y_true_tensor  = testset.get_next()
-model = yolov3.yolov3(NUM_CLASSES, ANCHORS)
-with tf.variable_scope('yolov3'):
-    pred_feature_map    = model.forward(images_tensor, is_training=False)
-    y_pred_tensor       = model.predict(pred_feature_map)
-
-saver = tf.train.Saver()
-saver.restore(sess, CKPT_FILE)
-
-try:
-    image_idx = 0
-    while True:
-        y_pred, y_true, image  = sess.run([y_pred_tensor, y_true_tensor, images_tensor])
-        pred_boxes = y_pred[0][0]
-        pred_confs = y_pred[1][0]
-        pred_probs = y_pred[2][0]
-        image      = Image.fromarray(np.uint8(image[0]*255))
-
-        true_labels_list, true_boxes_list = [], []
-        for i in range(3):
-            true_probs_temp = y_true[i][..., 5: ]
-            true_boxes_temp = y_true[i][..., 0:4]
-            object_mask     = true_probs_temp.sum(axis=-1) > 0
-
-            true_probs_temp = true_probs_temp[object_mask]
-            true_boxes_temp = true_boxes_temp[object_mask]
-
-            true_labels_list += np.argmax(true_probs_temp, axis=-1).tolist()
-            true_boxes_list  += true_boxes_temp.tolist()
-
-        pred_boxes, pred_scores, pred_labels = utils.cpu_nms(pred_boxes, pred_confs*pred_probs, NUM_CLASSES,
-                                                      score_thresh=SCORE_THRESH, iou_thresh=IOU_THRESH)
-        # image = utils.draw_boxes(image, pred_boxes, pred_scores, pred_labels, CLASSES, [IMAGE_H, IMAGE_W], show=True)
-        true_boxes = np.array(true_boxes_list)
-        box_centers, box_sizes = true_boxes[:,0:2], true_boxes[:,2:4]
-
-        true_boxes[:,0:2] = box_centers - box_sizes / 2.
-        true_boxes[:,2:4] = true_boxes[:,0:2] + box_sizes
-        pred_labels_list = [] if pred_labels is None else pred_labels.tolist()
-
-        all_detections.append( [pred_boxes, pred_scores, pred_labels_list])
-        all_annotations.append([true_boxes, true_labels_list])
-        image_idx += 1
-        if image_idx % 100 == 0:
-            sys.stdout.write(".")
-            sys.stdout.flush()
-
-
-except tf.errors.OutOfRangeError:
-    pass
-
-
-for idx in range(NUM_CLASSES):
-    true_positives  = []
-    scores = []
-    num_annotations = 0
-
-    for i in tqdm(range(len(all_annotations)), desc="Computing AP for class %12s" %(CLASSES[idx])):
-        pred_boxes, pred_scores, pred_labels_list = all_detections[i]
-        true_boxes, true_labels_list              = all_annotations[i]
-        detected                                  = []
-        num_annotations                          += true_labels_list.count(idx)
-
-        for k in range(len(pred_labels_list)):
-            if pred_labels_list[k] != idx: continue
-
-            scores.append(pred_scores[k])
-            ious = utils.bbox_iou(pred_boxes[k:k+1], true_boxes)
-            m    = np.argmax(ious)
-            if ious[m] > IOU_THRESH and pred_labels_list[k] == true_labels_list[m] and m not in detected:
-                detected.append(m)
-                true_positives.append(1)
-            else:
-                true_positives.append(0)
-
-    num_predictions = len(true_positives)
-    true_positives  = np.array(true_positives)
-    false_positives = np.ones_like(true_positives) - true_positives
-    # sorted by score
-    indices = np.argsort(-np.array(scores))
-    false_positives = false_positives[indices]
-    true_positives = true_positives[indices]
-    # compute false positives and true positives
-    false_positives = np.cumsum(false_positives)
-    true_positives = np.cumsum(true_positives)
-    # compute recall and precision
-    recall    = true_positives / np.maximum(num_annotations, np.finfo(np.float64).eps)
-    precision = true_positives / np.maximum(num_predictions, np.finfo(np.float64).eps)
-    # compute average precision
-    average_precision = utils.compute_ap(recall, precision)
-    all_aver_precs[CLASSES[idx]] = average_precision
-
-for idx in range(NUM_CLASSES):
-    cls_name = CLASSES[idx]
-    print("=> Class %10s - AP: %.4f" %(cls_name, all_aver_precs[cls_name]))
-
-print("=> mAP: %.4f" %(sum(all_aver_precs.values()) / NUM_CLASSES))
+if __name__ == '__main__': YoloTest().evaluate()
 
 
 

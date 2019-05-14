@@ -1,0 +1,13 @@
+Total BFLOPS 65.864 
+
+ seen 64 
+Enter Image Path: data/horses.jpg: Predicted in 42.076185 seconds.
+horse: 88%	(left_x:    3   top_y:  185   width:  150   height:  167)
+horse: 99%	(left_x:    5   top_y:  198   width:  307   height:  214)
+horse: 96%	(left_x:  236   top_y:  180   width:  215   height:  169)
+horse: 99%	(left_x:  440   top_y:  209   width:  156   height:  142)
+Enter Image Path: data/person.jpg: Predicted in 41.767213 seconds.
+dog: 99%	(left_x:   58   top_y:  262   width:  147   height:   89)
+person: 100%	(left_x:  190   top_y:   95   width:   86   height:  284)
+horse: 100%	(left_x:  394   top_y:  137   width:  215   height:  206)
+Enter Image Path: 

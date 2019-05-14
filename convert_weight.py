@@ -1,136 +1,84 @@
 #! /usr/bin/env python
 # coding=utf-8
 #================================================================
-#   Copyright (C) 2018 * Ltd. All rights reserved.
+#   Copyright (C) 2019 * Ltd. All rights reserved.
 #
 #   Editor      : VIM
 #   File name   : convert_weight.py
 #   Author      : YunYang1994
-#   Created date: 2018-11-27 12:37:22
+#   Created date: 2019-02-28 13:51:31
 #   Description :
 #
 #================================================================
 
-import os
-import sys
-import wget
-import time
-import argparse
+
 import tensorflow as tf
-from core import yolov3, utils
+from core.yolov3 import YOLOV3
+from core.config import cfg
+
+org_weights_path = cfg.YOLO.ORIGINAL_WEIGHT
+cur_weights_path = cfg.YOLO.DEMO_WEIGHT
+preserve_cur_names = ['conv_sbbox', 'conv_mbbox', 'conv_lbbox']
+preserve_org_names = ['Conv_6', 'Conv_14', 'Conv_22']
+
+org_weights_mess = []
+tf.Graph().as_default()
+load = tf.train.import_meta_graph(org_weights_path + '.meta')
+with tf.Session() as sess:
+    load.restore(sess, org_weights_path)
+    for var in tf.global_variables():
+        var_name = var.op.name
+        var_name_mess = str(var_name).split('/')
+        var_shape = var.shape
+        org_weights_mess.append([var_name, var_shape])
+        print("=> " + str(var_name).ljust(50), var_shape)
+print()
+tf.reset_default_graph()
+
+cur_weights_mess = []
+tf.Graph().as_default()
+with tf.name_scope('input'):
+    input_data = tf.placeholder(dtype=tf.float32, shape=(1, 416, 416, 3), name='input_data')
+    training = tf.placeholder(dtype=tf.bool, name='trainable')
+model = YOLOV3(input_data, training)
+for var in tf.global_variables():
+    var_name = var.op.name
+    var_name_mess = str(var_name).split('/')
+    var_shape = var.shape
+    print(var_name_mess[0])
+    cur_weights_mess.append([var_name, var_shape])
+    print("=> " + str(var_name).ljust(50), var_shape)
+
+org_weights_num = len(org_weights_mess)
+cur_weights_num = len(cur_weights_mess)
+if cur_weights_num != org_weights_num:
+    raise RuntimeError
+
+print('=> Number of weights that will rename:\t%d' % cur_weights_num)
+cur_to_org_dict = {}
+for index in range(org_weights_num):
+    org_name, org_shape = org_weights_mess[index]
+    cur_name, cur_shape = cur_weights_mess[index]
+    if cur_shape != org_shape:
+        print(org_weights_mess[index])
+        print(cur_weights_mess[index])
+        raise RuntimeError
+    cur_to_org_dict[cur_name] = org_name
+    print("=> " + str(cur_name).ljust(50) + ' : ' + org_name)
+
+with tf.name_scope('load_save'):
+    name_to_var_dict = {var.op.name: var for var in tf.global_variables()}
+    restore_dict = {cur_to_org_dict[cur_name]: name_to_var_dict[cur_name] for cur_name in cur_to_org_dict}
+    load = tf.train.Saver(restore_dict)
+    save = tf.train.Saver(tf.global_variables())
+    for var in tf.global_variables():
+        print("=> " + var.op.name)
+
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    print('=> Restoring weights from:\t %s' % org_weights_path)
+    load.restore(sess, org_weights_path)
+    save.save(sess, cur_weights_path)
+tf.reset_default_graph()
 
 
-class parser(argparse.ArgumentParser):
-
-    def __init__(self,description):
-        super(parser, self).__init__(description)
-
-        self.add_argument(
-            "--ckpt_file", "-cf", default='./checkpoint/yolov3.ckpt', type=str,
-            help="[default: %(default)s] The checkpoint file ...",
-            metavar="<CF>",
-        )
-
-        self.add_argument(
-            "--num_classes", "-nc", default=80, type=int,
-            help="[default: %(default)s] The number of classes ...",
-            metavar="<NC>",
-        )
-
-        self.add_argument(
-            "--anchors_path", "-ap", default="./data/coco_anchors.txt", type=str,
-            help="[default: %(default)s] The path of anchors ...",
-            metavar="<AP>",
-        )
-
-        self.add_argument(
-            "--weights_path", "-wp", default='./checkpoint/yolov3.weights', type=str,
-            help="[default: %(default)s] Download binary file with desired weights",
-            metavar="<WP>",
-        )
-
-        self.add_argument(
-            "--convert", "-cv", action='store_true',
-            help="[default: %(default)s] Downloading yolov3 weights and convert them",
-        )
-
-        self.add_argument(
-            "--freeze", "-fz", action='store_true',
-            help="[default: %(default)s] freeze the yolov3 graph to pb ...",
-        )
-
-        self.add_argument(
-            "--image_h", "-ih", default=416, type=int,
-            help="[default: %(default)s] The height of image, 416 or 608",
-            metavar="<IH>",
-        )
-
-        self.add_argument(
-            "--image_w", "-iw", default=416, type=int,
-            help="[default: %(default)s] The width of image, 416 or 608",
-            metavar="<IW>",
-        )
-
-        self.add_argument(
-            "--iou_threshold", "-it", default=0.5, type=float,
-            help="[default: %(default)s] The iou_threshold for gpu nms",
-            metavar="<IT>",
-        )
-
-        self.add_argument(
-            "--score_threshold", "-st", default=0.5, type=float,
-            help="[default: %(default)s] The score_threshold for gpu nms",
-            metavar="<ST>",
-        )
-
-
-def main(argv):
-
-    flags = parser(description="freeze yolov3 graph from checkpoint file").parse_args()
-    print("=> the input image size is [%d, %d]" %(flags.image_h, flags.image_w))
-    anchors = utils.get_anchors(flags.anchors_path, flags.image_h, flags.image_w)
-    model = yolov3.yolov3(flags.num_classes, anchors)
-
-    with tf.Graph().as_default() as graph:
-        sess = tf.Session(graph=graph)
-        inputs = tf.placeholder(tf.float32, [1, flags.image_h, flags.image_w, 3]) # placeholder for detector inputs
-        print("=>", inputs)
-
-        with tf.variable_scope('yolov3'):
-            feature_map = model.forward(inputs, is_training=False)
-
-        boxes, confs, probs = model.predict(feature_map)
-        scores = confs * probs
-        print("=>", boxes.name[:-2], scores.name[:-2])
-        cpu_out_node_names = [boxes.name[:-2], scores.name[:-2]]
-        boxes, scores, labels = utils.gpu_nms(boxes, scores, flags.num_classes,
-                                              score_thresh=flags.score_threshold,
-                                              iou_thresh=flags.iou_threshold)
-        print("=>", boxes.name[:-2], scores.name[:-2], labels.name[:-2])
-        gpu_out_node_names = [boxes.name[:-2], scores.name[:-2], labels.name[:-2]]
-        feature_map_1, feature_map_2, feature_map_3 = feature_map
-        saver = tf.train.Saver(var_list=tf.global_variables(scope='yolov3'))
-
-        if flags.convert:
-            if not os.path.exists(flags.weights_path):
-                url = 'https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3.weights'
-                for i in range(3):
-                    time.sleep(1)
-                    print("=> %s does not exists ! " %flags.weights_path)
-                print("=> It will take a while to download it from %s" %url)
-                print('=> Downloading yolov3 weights ... ')
-                wget.download(url, flags.weights_path)
-
-            load_ops = utils.load_weights(tf.global_variables(scope='yolov3'), flags.weights_path)
-            sess.run(load_ops)
-            save_path = saver.save(sess, save_path=flags.ckpt_file)
-            print('=> model saved in path: {}'.format(save_path))
-
-        if flags.freeze:
-            saver.restore(sess, flags.ckpt_file)
-            print('=> checkpoint file restored from ', flags.ckpt_file)
-            utils.freeze_graph(sess, './checkpoint/yolov3_cpu_nms.pb', cpu_out_node_names)
-            utils.freeze_graph(sess, './checkpoint/yolov3_gpu_nms.pb', gpu_out_node_names)
-
-
-if __name__ == "__main__": main(sys.argv)

@@ -21,30 +21,26 @@ $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
 $ cd tensorflow-yolov3
 $ pip install -r ./docs/requirements.txt
 ```
-3. Exporting loaded COCO weights as TF checkpoint(`yolov3.ckpt`) and frozen graph (`yolov3_gpu_nms.pb`) . If you don't have [yolov3.weights](https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3.weights). Download and put it in the dir `./checkpoint`
+3. Exporting loaded COCO weights as TF checkpoint(`yolov3.ckpt`)
 ```bashrc
-$ python convert_weight.py --convert --freeze
+$ wget 
+$ python convert_weight.py
 ```
 4. Then you will get some `.pb` files in the dir `./checkpoint`,  and run the demo script
 ```bashrc
-$ python nms_demo.py
+$ python image_demo.py
 $ python video_demo.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
 ## part 3. Train on your own dataset
-Three files are required as follows:
+Two files are required as follows:
 
 - `dataset.txt`: 
 
 ```
-xxx/xxx.jpg 18.19 6.32 424.13 421.83 20 323.86 2.65 640.0 421.94 20 
-xxx/xxx.jpg 55.38 132.63 519.84 380.4 16
-# image_path x_min y_min x_max y_max class_id  x_min y_min ... class_id 
-```
-- `anchors.txt`
-
-```
-0.10,0.13, 0.16,0.30, 0.33,0.23, 0.40,0.61, 0.62,0.45, 0.69,0.59, 0.76,0.60,  0.86,0.68,  0.91,0.76
+xxx/xxx.jpg 18.19,6.32,424.13,421.83 20 323.86,2.65,640.0,421.94,20 
+xxx/xxx.jpg 48,240,195,371,11 8,12,352,498,14
+# image_path x_min, y_min, x_max, y_max class_id  x_min, y_min ... class_id 
 ```
 
 - `class.names`
@@ -57,38 +53,53 @@ car
 toothbrush
 ```
 
-### 3.1 Train raccoon dataset
+### 3.1 Train VOC dataset
 To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class with 200 images (180 for train, 20 for test), I have prepared a shell script in the `./scripts` which enables you to get data and train it !
 #### how to train it ?
-```
-$ sh scripts/make_raccoon_tfrecords.sh
-$ python show_input_image.py               # show your input image (optional)
-$ python kmeans.py                         # get prior anchors and rescale the values to the range [0,1]
-$ python convert_weight.py --convert       # get pretrained weights
-$ python quick_train.py
-$ tensorboard --logdir ./data
-```
-As you can see in the tensorboard, if your dataset is too small or you train for too long, the model starts to overfit and learn patterns from training data that does not generalize to the test data.
-
-#### how to test and evaluate it ?
-```
-$ python convert_weight.py -cf ./checkpoint/yolov3.ckpt-2500 -nc 1 -ap ./data/raccoon_anchors.txt --freeze
-$ python quick_test.py
-$ python evaluate.py
-```
-if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
-
-|raccoon-181.jpg|raccoon-55.jpg|
-|---|:---:|
-|![weibo-logo](./docs/images/raccoon1.jpg)|![weibo-logo](./docs/images/raccoon2.jpg)|
-
-### 3.2 Train other dataset
 Download VOC PASCAL trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
 ```
+put them in the following directory
+
+```bashrc
+
+VOC           # path:  /home/yang/test/VOC/
+├── test
+|    └──VOCdevkit
+|       └──VOC2007 (来自 VOCtest_06-Nov-2007.tar)
+└── train
+     └──VOCdevkit
+             └──VOC2007 (来自 VOCtrainval_06-Nov-2007.tar)
+                     └──VOC2012 (来自 VOCtrainval_11-May-2012.tar)
+```
+Then edit your `./core/config.py`
+
+```bashrc
+__C.YOLO.CLASSES                = "./data/classes/raccon.names"
+__C.TRAIN.ANNOT_PATH            = "./data/dataset/voc_train.txt"
+__C.TEST.ANNOT_PATH             = "./data/dataset/voc_test.txt"
+
+```
+Finally, you can train it now
+
+```bashrc
+$ python train.py
+$ tensorboard --logdir ./data
+```
+As you can see in the tensorboard, if your dataset is too small or you train for too long, the model starts to overfit and learn patterns from training data that does not generalize to the test data.
+
+#### how to test and evaluate it ?
+```
+$ python evaluate.py
+# cd mAP
+$ python main.py -na
+```
+if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
+
+### 3.2 Train other dataset
 Download COCO trainval  and test data
 ```
 $ wget http://images.cocodataset.org/zips/train2017.zip
@@ -148,7 +159,7 @@ Non-max suppression uses the very important function called **"Intersection over
 
 ![image](./docs/images/iou.png)
 
-Welecome to discuss with me.
+if you want more details, reading the fucking source code and original paper !
 
 ## part 5. Other Implementations
 
@@ -161,11 +172,3 @@ Welecome to discuss with me.
 [-**`Understanding YOLO`**](https://hackernoon.com/understanding-yolo-f5a74bbc7967)
 
 [-**`YOLOv3目标检测有了TensorFlow实现，可用自己的数据来训练`**](https://mp.weixin.qq.com/s/cq7g1-4oFTftLbmKcpi_aQ)<br>
-
-[- `学员分享 | 小哥哥和用YOLOv3做目标检测的故事「文末送课」`](https://mp.weixin.qq.com/s/dFiOkUsal62EoME52Iw-uQ)
-
-[-`目标检测|YOLOv2原理与实现(附YOLOv3)`](https://zhuanlan.zhihu.com/p/35325884)
-
-[-` YOLOv2は、2016年12月25日時点の、速度、精度ともに世界最高のリアルタイム物体検出手法です。`](https://github.com/leetenki/YOLOv2/blob/master/YOLOv2.md)
-
-[-` 知乎专栏-目标检测yolov2`](https://zhuanlan.zhihu.com/p/35325884)

@@ -6,216 +6,255 @@
 #   Editor      : VIM
 #   File name   : dataset.py
 #   Author      : YunYang1994
-#   Created date: 2019-01-19 22:43:26
+#   Created date: 2019-03-15 18:05:03
 #   Description :
 #
 #================================================================
 
+import os
 import cv2
+import random
 import numpy as np
-from core import utils
 import tensorflow as tf
+import core.utils as utils
+from core.config import cfg
 
-class Parser(object):
-    def __init__(self, image_h, image_w, anchors, num_classes, debug=False):
 
-        self.anchors     = anchors
-        self.num_classes = num_classes
-        self.image_h     = image_h
-        self.image_w     = image_w
-        self.debug       = debug
 
-    def flip_left_right(self, image, gt_boxes):
+class Dataset(object):
+    """implement Dataset here"""
+    def __init__(self, dataset_type):
+        self.annot_path  = cfg.TRAIN.ANNOT_PATH if dataset_type == 'train' else cfg.TEST.ANNOT_PATH
+        self.input_sizes = cfg.TRAIN.INPUT_SIZE if dataset_type == 'train' else cfg.TEST.INPUT_SIZE
+        self.batch_size  = cfg.TRAIN.BATCH_SIZE if dataset_type == 'train' else cfg.TEST.BATCH_SIZE
+        self.data_aug    = cfg.TRAIN.DATA_AUG   if dataset_type == 'train' else cfg.TEST.DATA_AUG
 
-        w = tf.cast(tf.shape(image)[1], tf.float32)
-        image = tf.image.flip_left_right(image)
+        self.train_input_sizes = cfg.TRAIN.INPUT_SIZE
+        self.strides = np.array(cfg.YOLO.STRIDES)
+        self.classes = utils.read_class_names(cfg.YOLO.CLASSES)
+        self.num_classes = len(self.classes)
+        self.anchors = np.array(utils.get_anchors(cfg.YOLO.ANCHORS))
+        self.anchor_per_scale = cfg.YOLO.ANCHOR_PER_SCALE
+        self.max_bbox_per_scale = 150
 
-        xmin, ymin, xmax, ymax, label = tf.unstack(gt_boxes, axis=1)
-        xmin, ymin, xmax, ymax = w-xmax, ymin, w-xmin, ymax
-        gt_boxes = tf.stack([xmin, ymin, xmax, ymax, label], axis=1)
+        self.annotations = self.load_annotations(dataset_type)
+        self.num_samples = len(self.annotations)
+        self.num_batchs = int(np.ceil(self.num_samples / self.batch_size))
+        self.batch_count = 0
 
-        return image, gt_boxes
 
-    def random_distort_color(self, image, gt_boxes):
+    def load_annotations(self, dataset_type):
 
-        image = tf.image.random_brightness(image, max_delta=32./255.)
-        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
-        image = tf.image.random_hue(image, max_delta=0.2)
-        image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
+        with open(self.annot_path, 'r') as f:
+            txt = f.readlines()
+            annotations = [line.strip() for line in txt if len(line.strip().split()[1:]) != 0]
+        np.random.shuffle(annotations)
+        return annotations
 
-        return image, gt_boxes
+    def __iter__(self):
+        return self
 
-    def random_blur(self, image, gt_boxes):
+    def __next__(self):
 
-        gaussian_blur = lambda image: cv2.GaussianBlur(image, (5, 5), 0)
-        h, w = image.shape.as_list()[:2]
-        image = tf.py_func(gaussian_blur, [image], tf.uint8)
-        image.set_shape([h, w, 3])
+        with tf.device('/cpu:0'):
+            self.train_input_size = random.choice(self.train_input_sizes)
+            self.train_output_sizes = self.train_input_size // self.strides
 
-        return image, gt_boxes
+            batch_image = np.zeros((self.batch_size, self.train_input_size, self.train_input_size, 3))
 
-    def random_crop(self, image, gt_boxes, min_object_covered=0.8, aspect_ratio_range=[0.8, 1.2], area_range=[0.5, 1.0]):
+            batch_label_sbbox = np.zeros((self.batch_size, self.train_output_sizes[0], self.train_output_sizes[0],
+                                          self.anchor_per_scale, 5 + self.num_classes))
+            batch_label_mbbox = np.zeros((self.batch_size, self.train_output_sizes[1], self.train_output_sizes[1],
+                                          self.anchor_per_scale, 5 + self.num_classes))
+            batch_label_lbbox = np.zeros((self.batch_size, self.train_output_sizes[2], self.train_output_sizes[2],
+                                          self.anchor_per_scale, 5 + self.num_classes))
 
-        h, w = tf.cast(tf.shape(image)[0], tf.float32), tf.cast(tf.shape(image)[1], tf.float32)
-        xmin, ymin, xmax, ymax, label = tf.unstack(gt_boxes, axis=1)
-        bboxes = tf.stack([ ymin/h, xmin/w, ymax/h, xmax/w], axis=1)
-        bboxes = tf.clip_by_value(bboxes, 0, 1)
-        begin, size, dist_boxes = tf.image.sample_distorted_bounding_box(
-                                        tf.shape(image),
-                                        bounding_boxes=tf.expand_dims(bboxes, axis=0),
-                                        min_object_covered=min_object_covered,
-                                        aspect_ratio_range=aspect_ratio_range,
-                                        area_range=area_range)
-        # NOTE dist_boxes with shape: [ymin, xmin, ymax, xmax] and in values in range(0, 1)
-        # Employ the bounding box to distort the image.
-        croped_box = [dist_boxes[0,0,1]*w, dist_boxes[0,0,0]*h, dist_boxes[0,0,3]*w, dist_boxes[0,0,2]*h]
+            batch_sbboxes = np.zeros((self.batch_size, self.max_bbox_per_scale, 4))
+            batch_mbboxes = np.zeros((self.batch_size, self.max_bbox_per_scale, 4))
+            batch_lbboxes = np.zeros((self.batch_size, self.max_bbox_per_scale, 4))
 
-        croped_xmin = tf.clip_by_value(xmin, croped_box[0], croped_box[2])-croped_box[0]
-        croped_ymin = tf.clip_by_value(ymin, croped_box[1], croped_box[3])-croped_box[1]
-        croped_xmax = tf.clip_by_value(xmax, croped_box[0], croped_box[2])-croped_box[0]
-        croped_ymax = tf.clip_by_value(ymax, croped_box[1], croped_box[3])-croped_box[1]
+            num = 0
+            if self.batch_count < self.num_batchs:
+                while num < self.batch_size:
+                    index = self.batch_count * self.batch_size + num
+                    if index >= self.num_samples: index -= self.num_samples
+                    annotation = self.annotations[index]
+                    image, bboxes = self.parse_annotation(annotation)
+                    label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes = self.preprocess_true_boxes(bboxes)
 
-        image = tf.slice(image, begin, size)
-        gt_boxes = tf.stack([croped_xmin, croped_ymin, croped_xmax, croped_ymax, label], axis=1)
+                    batch_image[num, :, :, :] = image
+                    batch_label_sbbox[num, :, :, :, :] = label_sbbox
+                    batch_label_mbbox[num, :, :, :, :] = label_mbbox
+                    batch_label_lbbox[num, :, :, :, :] = label_lbbox
+                    batch_sbboxes[num, :, :] = sbboxes
+                    batch_mbboxes[num, :, :] = mbboxes
+                    batch_lbboxes[num, :, :] = lbboxes
+                    num += 1
+                self.batch_count += 1
+                return batch_image, batch_label_sbbox, batch_label_mbbox, batch_label_lbbox, \
+                       batch_sbboxes, batch_mbboxes, batch_lbboxes
+            else:
+                self.batch_count = 0
+                np.random.shuffle(self.annotations)
+                raise StopIteration
 
-        return image, gt_boxes
+    def random_horizontal_flip(self, image, bboxes):
 
-    def preprocess(self, image, gt_boxes):
+        if random.random() < 0.5:
+            _, w, _ = image.shape
+            image = image[:, ::-1, :]
+            bboxes[:, [0,2]] = w - bboxes[:, [2,0]]
 
-        ################################# data augmentation ##################################
-        # data_aug_flag = tf.to_int32(tf.random_uniform(shape=[], minval=-5, maxval=5))
+        return image, bboxes
 
-        # caseO = tf.equal(data_aug_flag, 1), lambda: self.flip_left_right(image, gt_boxes)
-        # case1 = tf.equal(data_aug_flag, 2), lambda: self.random_distort_color(image, gt_boxes)
-        # case2 = tf.equal(data_aug_flag, 3), lambda: self.random_blur(image, gt_boxes)
-        # case3 = tf.equal(data_aug_flag, 4), lambda: self.random_crop(image, gt_boxes)
+    def random_crop(self, image, bboxes):
 
-        # image, gt_boxes = tf.case([caseO, case1, case2, case3], lambda: (image, gt_boxes))
+        if random.random() < 0.5:
+            h, w, _ = image.shape
+            max_bbox = np.concatenate([np.min(bboxes[:, 0:2], axis=0), np.max(bboxes[:, 2:4], axis=0)], axis=-1)
 
-        image, gt_boxes = utils.resize_image_correct_bbox(image, gt_boxes, self.image_h, self.image_w)
+            max_l_trans = max_bbox[0]
+            max_u_trans = max_bbox[1]
+            max_r_trans = w - max_bbox[2]
+            max_d_trans = h - max_bbox[3]
 
-        if self.debug: return image, gt_boxes
+            crop_xmin = max(0, int(max_bbox[0] - random.uniform(0, max_l_trans)))
+            crop_ymin = max(0, int(max_bbox[1] - random.uniform(0, max_u_trans)))
+            crop_xmax = max(w, int(max_bbox[2] + random.uniform(0, max_r_trans)))
+            crop_ymax = max(h, int(max_bbox[3] + random.uniform(0, max_d_trans)))
 
-        y_true_13, y_true_26, y_true_52 = tf.py_func(self.preprocess_true_boxes, inp=[gt_boxes],
-                            Tout = [tf.float32, tf.float32, tf.float32])
-        image = image / 255.
+            image = image[crop_ymin : crop_ymax, crop_xmin : crop_xmax]
 
-        return image, y_true_13, y_true_26, y_true_52
+            bboxes[:, [0, 2]] = bboxes[:, [0, 2]] - crop_xmin
+            bboxes[:, [1, 3]] = bboxes[:, [1, 3]] - crop_ymin
 
-    def preprocess_true_boxes(self, gt_boxes):
-        """
-        Preprocess true boxes to training input format
-        Parameters:
-        -----------
-        :param true_boxes: numpy.ndarray of shape [T, 4]
-                            T: the number of boxes in each image.
-                            4: coordinate => x_min, y_min, x_max, y_max
-        :param true_labels: class id
-        :param input_shape: the shape of input image to the yolov3 network, [416, 416]
-        :param anchors: array, shape=[9,2], 9: the number of anchors, 2: width, height
-        :param num_classes: integer, for coco dataset, it is 80
-        Returns:
-        ----------
-        y_true: list(3 array), shape like yolo_outputs, [13, 13, 3, 85]
-                            13:cell szie, 3:number of anchors
-                            85: box_centers, box_sizes, confidence, probability
-        """
-        num_layers = len(self.anchors) // 3
-        anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
-        grid_sizes = [[self.image_h//x, self.image_w//x] for x in (32, 16, 8)]
+        return image, bboxes
 
-        box_centers = (gt_boxes[:, 0:2] + gt_boxes[:, 2:4]) / 2 # the center of box
-        box_sizes =    gt_boxes[:, 2:4] - gt_boxes[:, 0:2] # the height and width of box
+    def random_translate(self, image, bboxes):
 
-        gt_boxes[:, 0:2] = box_centers
-        gt_boxes[:, 2:4] = box_sizes
+        if random.random() < 0.5:
+            h, w, _ = image.shape
+            max_bbox = np.concatenate([np.min(bboxes[:, 0:2], axis=0), np.max(bboxes[:, 2:4], axis=0)], axis=-1)
 
-        y_true_13 = np.zeros(shape=[grid_sizes[0][0], grid_sizes[0][1], 3, 5+self.num_classes], dtype=np.float32)
-        y_true_26 = np.zeros(shape=[grid_sizes[1][0], grid_sizes[1][1], 3, 5+self.num_classes], dtype=np.float32)
-        y_true_52 = np.zeros(shape=[grid_sizes[2][0], grid_sizes[2][1], 3, 5+self.num_classes], dtype=np.float32)
+            max_l_trans = max_bbox[0]
+            max_u_trans = max_bbox[1]
+            max_r_trans = w - max_bbox[2]
+            max_d_trans = h - max_bbox[3]
 
-        y_true = [y_true_13, y_true_26, y_true_52]
-        anchors_max =  self.anchors / 2.
-        anchors_min = -anchors_max
-        valid_mask = box_sizes[:, 0] > 0
+            tx = random.uniform(-(max_l_trans - 1), (max_r_trans - 1))
+            ty = random.uniform(-(max_u_trans - 1), (max_d_trans - 1))
 
-        # Discard zero rows.
-        wh = box_sizes[valid_mask]
-        # set the center of all boxes as the origin of their coordinates
-        # and correct their coordinates
-        wh = np.expand_dims(wh, -2)
-        boxes_max = wh / 2.
-        boxes_min = -boxes_max
+            M = np.array([[1, 0, tx], [0, 1, ty]])
+            image = cv2.warpAffine(image, M, (w, h))
 
-        intersect_mins = np.maximum(boxes_min, anchors_min)
-        intersect_maxs = np.minimum(boxes_max, anchors_max)
-        intersect_wh   = np.maximum(intersect_maxs - intersect_mins, 0.)
-        intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
-        box_area       = wh[..., 0] * wh[..., 1]
+            bboxes[:, [0, 2]] = bboxes[:, [0, 2]] + tx
+            bboxes[:, [1, 3]] = bboxes[:, [1, 3]] + ty
 
-        anchor_area = self.anchors[:, 0] * self.anchors[:, 1]
-        iou = intersect_area / (box_area + anchor_area - intersect_area)
-        # Find best anchor for each true box
-        best_anchor = np.argmax(iou, axis=-1)
+        return image, bboxes
 
-        for t, n in enumerate(best_anchor):
-            for l in range(num_layers):
-                if n not in anchor_mask[l]: continue
+    def parse_annotation(self, annotation):
 
-                i = np.floor(gt_boxes[t,0]/self.image_w*grid_sizes[l][1]).astype('int32')
-                j = np.floor(gt_boxes[t,1]/self.image_h*grid_sizes[l][0]).astype('int32')
+        line = annotation.split()
+        image_path = line[0]
+        image = np.array(cv2.imread(image_path))
+        bboxes = np.array([list(map(int, box.split(','))) for box in line[1:]])
 
-                k = anchor_mask[l].index(n)
-                c = gt_boxes[t, 4].astype('int32')
+        if self.data_aug:
+            image, bboxes = self.random_horizontal_flip(np.copy(image), np.copy(bboxes))
+            image, bboxes = self.random_crop(np.copy(image), np.copy(bboxes))
+            image, bboxes = self.random_translate(np.copy(image), np.copy(bboxes))
 
-                y_true[l][j, i, k, 0:4] = gt_boxes[t, 0:4]
-                y_true[l][j, i, k,   4] = 1.
-                y_true[l][j, i, k, 5+c] = 1.
+        image, bboxes = utils.image_preporcess(np.copy(image), [self.train_input_size, self.train_input_size], np.copy(bboxes))
+        return image, bboxes
 
-        return y_true_13, y_true_26, y_true_52
+    def bbox_iou(self, boxes1, boxes2):
 
-    def parser_example(self, serialized_example):
+        boxes1 = np.array(boxes1)
+        boxes2 = np.array(boxes2)
 
-        features = tf.parse_single_example(
-            serialized_example,
-            features = {
-                'image' : tf.FixedLenFeature([], dtype = tf.string),
-                'boxes' : tf.FixedLenFeature([], dtype = tf.string),
-            }
-        )
+        boxes1_area = boxes1[..., 2] * boxes1[..., 3]
+        boxes2_area = boxes2[..., 2] * boxes2[..., 3]
 
-        image = tf.image.decode_jpeg(features['image'], channels = 3)
-        image = tf.image.convert_image_dtype(image, tf.uint8)
+        boxes1 = np.concatenate([boxes1[..., :2] - boxes1[..., 2:] * 0.5,
+                                boxes1[..., :2] + boxes1[..., 2:] * 0.5], axis=-1)
+        boxes2 = np.concatenate([boxes2[..., :2] - boxes2[..., 2:] * 0.5,
+                                boxes2[..., :2] + boxes2[..., 2:] * 0.5], axis=-1)
 
-        gt_boxes = tf.decode_raw(features['boxes'], tf.float32)
-        gt_boxes = tf.reshape(gt_boxes, shape=[-1,5])
+        left_up = np.maximum(boxes1[..., :2], boxes2[..., :2])
+        right_down = np.minimum(boxes1[..., 2:], boxes2[..., 2:])
 
-        return self.preprocess(image, gt_boxes)
+        inter_section = np.maximum(right_down - left_up, 0.0)
+        inter_area = inter_section[..., 0] * inter_section[..., 1]
+        union_area = boxes1_area + boxes2_area - inter_area
 
-class dataset(object):
-    def __init__(self, parser, tfrecords_path, batch_size, shuffle=None, repeat=True):
-        self.parser = parser
-        self.filenames = tf.gfile.Glob(tfrecords_path)
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.repeat  = repeat
-        self._buildup()
+        return inter_area / union_area
 
-    def _buildup(self):
-        try:
-            self._TFRecordDataset = tf.data.TFRecordDataset(self.filenames)
-        except:
-            raise NotImplementedError("No tfrecords found!")
+    def preprocess_true_boxes(self, bboxes):
 
-        self._TFRecordDataset = self._TFRecordDataset.map(map_func = self.parser.parser_example,
-                                                        num_parallel_calls = 10)
-        self._TFRecordDataset = self._TFRecordDataset.repeat() if self.repeat else self._TFRecordDataset
+        label = [np.zeros((self.train_output_sizes[i], self.train_output_sizes[i], self.anchor_per_scale,
+                           5 + self.num_classes)) for i in range(3)]
+        bboxes_xywh = [np.zeros((self.max_bbox_per_scale, 4)) for _ in range(3)]
+        bbox_count = np.zeros((3,))
 
-        if self.shuffle is not None:
-            self._TFRecordDataset = self._TFRecordDataset.shuffle(self.shuffle)
+        for bbox in bboxes:
+            bbox_coor = bbox[:4]
+            bbox_class_ind = bbox[4]
 
-        self._TFRecordDataset = self._TFRecordDataset.batch(self.batch_size).prefetch(self.batch_size)
-        self._iterator = self._TFRecordDataset.make_one_shot_iterator()
+            onehot = np.zeros(self.num_classes, dtype=np.float)
+            onehot[bbox_class_ind] = 1.0
+            uniform_distribution = np.full(self.num_classes, 1.0 / self.num_classes)
+            deta = 0.01
+            smooth_onehot = onehot * (1 - deta) + deta * uniform_distribution
 
-    def get_next(self):
-        return self._iterator.get_next()
+            bbox_xywh = np.concatenate([(bbox_coor[2:] + bbox_coor[:2]) * 0.5, bbox_coor[2:] - bbox_coor[:2]], axis=-1)
+            bbox_xywh_scaled = 1.0 * bbox_xywh[np.newaxis, :] / self.strides[:, np.newaxis]
+
+            iou = []
+            exist_positive = False
+            for i in range(3):
+                anchors_xywh = np.zeros((self.anchor_per_scale, 4))
+                anchors_xywh[:, 0:2] = np.floor(bbox_xywh_scaled[i, 0:2]).astype(np.int32) + 0.5
+                anchors_xywh[:, 2:4] = self.anchors[i]
+
+                iou_scale = self.bbox_iou(bbox_xywh_scaled[i][np.newaxis, :], anchors_xywh)
+                iou.append(iou_scale)
+                iou_mask = iou_scale > 0.3
+
+                if np.any(iou_mask):
+                    xind, yind = np.floor(bbox_xywh_scaled[i, 0:2]).astype(np.int32)
+
+                    label[i][yind, xind, iou_mask, :] = 0
+                    label[i][yind, xind, iou_mask, 0:4] = bbox_xywh
+                    label[i][yind, xind, iou_mask, 4:5] = 1.0
+                    label[i][yind, xind, iou_mask, 5:] = smooth_onehot
+
+                    bbox_ind = int(bbox_count[i] % self.max_bbox_per_scale)
+                    bboxes_xywh[i][bbox_ind, :4] = bbox_xywh
+                    bbox_count[i] += 1
+
+                    exist_positive = True
+
+            if not exist_positive:
+                best_anchor_ind = np.argmax(np.array(iou).reshape(-1), axis=-1)
+                best_detect = int(best_anchor_ind / self.anchor_per_scale)
+                best_anchor = int(best_anchor_ind % self.anchor_per_scale)
+                xind, yind = np.floor(bbox_xywh_scaled[best_detect, 0:2]).astype(np.int32)
+
+                label[best_detect][yind, xind, best_anchor, :] = 0
+                label[best_detect][yind, xind, best_anchor, 0:4] = bbox_xywh
+                label[best_detect][yind, xind, best_anchor, 4:5] = 1.0
+                label[best_detect][yind, xind, best_anchor, 5:] = smooth_onehot
+
+                bbox_ind = int(bbox_count[best_detect] % self.max_bbox_per_scale)
+                bboxes_xywh[best_detect][bbox_ind, :4] = bbox_xywh
+                bbox_count[best_detect] += 1
+        label_sbbox, label_mbbox, label_lbbox = label
+        sbboxes, mbboxes, lbboxes = bboxes_xywh
+        return label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes
+
+    def __len__(self):
+        return self.num_batchs
+
+
+
+
