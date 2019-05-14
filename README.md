@@ -20,7 +20,7 @@ $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
 $ cd tensorflow-yolov3
 $ pip install -r ./docs/requirements.txt
 ```
-3. Exporting loaded COCO weights as TF checkpoint(`yolov3.ckpt`)
+3. Exporting loaded COCO weights as TF checkpoint(`yolov3_coco.ckpt`)
 ```bashrc
 $ cd checkpoint
 $ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3_coco.tar.gz
@@ -117,7 +117,7 @@ The paper suggests to use clustering on bounding box shape to find the good anch
 ![image](./docs/images/K-means.png)
 
 ### 4.2 Architercutre details
-In this project, I use the pretrained weights, where we have 80 trained yolo classes (COCO dataset), for recognition. And the class [label](./data/coco.names) is represented as  `c`  and it's integer from 1 to 80, each number represents the class label accordingly. If `c=3`, then the classified object is a  `car`.  The image features learned by the deep convolutional layers are passed onto a classifier and regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).details also see in the below picture. (thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!)
+In this project, I use the pretrained weights, where we have 80 trained yolo classes (COCO dataset), for recognition. And the class [label](./data/classes/coco.names) is represented as  `c`  and it's integer from 1 to 80, each number represents the class label accordingly. If `c=3`, then the classified object is a  `car`.  The image features learned by the deep convolutional layers are passed onto a classifier and regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).details also see in the below picture. (thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!)
 ![image](./docs/images/levio.jpeg)
 
 ### 4.3 Neural network io:
