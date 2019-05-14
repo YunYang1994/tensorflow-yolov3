@@ -2,9 +2,11 @@
 
 Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
+- [x] [yolov3 with GIOU loss function](https://giou.stanford.edu/)
 - [x] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
 - [x] Basic working demo
 - [x] Training pipeline
+- [x] Multi-scale training method
 - [x] Compute VOC mAP
 
 YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
@@ -76,12 +78,13 @@ VOC           # path:  /home/yang/test/VOC/
      └──VOCdevkit
              └──VOC2007 (来自 VOCtrainval_06-Nov-2007.tar)
                      └──VOC2012 (来自 VOCtrainval_11-May-2012.tar)
+                     
 $ python scripts/voc_annotation.py --data_path /home/yang/test/VOC
 ```
 Then edit your `./core/config.py`
 
 ```bashrc
-__C.YOLO.CLASSES                = "./data/classes/raccon.names"
+__C.YOLO.CLASSES                = "./data/classes/voc.names"
 __C.TRAIN.ANNOT_PATH            = "./data/dataset/voc_train.txt"
 __C.TEST.ANNOT_PATH             = "./data/dataset/voc_test.txt"
 ```
