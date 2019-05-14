@@ -39,7 +39,7 @@ $ python video_demo.py # if use camera, set video_path = 0
 ## part 3. Train on your own dataset
 Two files are required as follows:
 
-- `dataset.txt`: 
+- [`dataset.txt`](https://raw.githubusercontent.com/YunYang1994/tensorflow-yolov3/master/data/dataset/voc_train.txt): 
 
 ```
 xxx/xxx.jpg 18.19,6.32,424.13,421.83 20 323.86,2.65,640.0,421.94,20 
@@ -47,7 +47,7 @@ xxx/xxx.jpg 48,240,195,371,11 8,12,352,498,14
 # image_path x_min, y_min, x_max, y_max class_id  x_min, y_min ... class_id 
 ```
 
-- `class.names`
+- [`class.names`](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/data/classes/coco.names):
 
 ```
 person
