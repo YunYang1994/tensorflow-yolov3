@@ -2,7 +2,7 @@
 
 Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
-- [x] [yolov3 with GIOU loss function](https://giou.stanford.edu/)
+- [x] [Training tensorflow-yolov3 with GIOU loss function](https://giou.stanford.edu/)
 - [x] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
 - [x] Basic working demo
 - [x] Training pipeline
