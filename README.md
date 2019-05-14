@@ -73,11 +73,11 @@ Put them in the following directory
 VOC           # path:  /home/yang/test/VOC/
 ├── test
 |    └──VOCdevkit
-|       └──VOC2007 (来自 VOCtest_06-Nov-2007.tar)
+|       └──VOC2007 (from VOCtest_06-Nov-2007.tar)
 └── train
      └──VOCdevkit
-             └──VOC2007 (来自 VOCtrainval_06-Nov-2007.tar)
-                     └──VOC2012 (来自 VOCtrainval_11-May-2012.tar)
+             └──VOC2007 (from VOCtrainval_06-Nov-2007.tar)
+                     └──VOC2012 (from VOCtrainval_11-May-2012.tar)
                      
 $ python scripts/voc_annotation.py --data_path /home/yang/test/VOC
 ```
