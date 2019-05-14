@@ -22,7 +22,10 @@ $ pip install -r ./docs/requirements.txt
 ```
 3. Exporting loaded COCO weights as TF checkpoint(`yolov3.ckpt`)
 ```bashrc
-$ wget 
+$ cd checkpoint
+$ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3_coco.tar.gz
+$ tar -xvf yolov3_coco.tar.gz
+$ cd ..
 $ python convert_weight.py
 ```
 4. Then you will get some `.pb` files in the dir `./checkpoint`,  and run the demo script
@@ -53,7 +56,7 @@ toothbrush
 ```
 
 ### 3.1 Train VOC dataset
-To help you understand my training process, I made this training-pipline demo. [raccoon dataset](https://github.com/YunYang1994/raccoon_dataset) has only one class with 200 images (180 for train, 20 for test), I have prepared a shell script in the `./scripts` which enables you to get data and train it !
+To help you understand my training process, I made this demo of training VOC PASCAL dataset
 #### how to train it ?
 Download VOC PASCAL trainval  and test data
 ```bashrc
