@@ -1,12 +1,11 @@
 ## part 1. Introduction
 
-Implementation of YOLO v3 object detector in Tensorflow (TF-Slim). This repository  is inspired by [Paweł Kapica](https://github.com/mystic123). The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
+Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
 - [x] Weights converter (util for exporting loaded COCO weights as TF checkpoint)
 - [x] Basic working demo
-- [x] Non max suppression on the both `GPU` and `CPU` is supported
 - [x] Training pipeline
-- [x] Compute COCO mAP
+- [x] Compute VOC mAP
 
 YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
 
@@ -62,7 +61,7 @@ $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.ta
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
 ```
-put them in the following directory
+Put them in the following directory
 
 ```bashrc
 
@@ -81,7 +80,6 @@ Then edit your `./core/config.py`
 __C.YOLO.CLASSES                = "./data/classes/raccon.names"
 __C.TRAIN.ANNOT_PATH            = "./data/dataset/voc_train.txt"
 __C.TEST.ANNOT_PATH             = "./data/dataset/voc_test.txt"
-
 ```
 Finally, you can train it now
 
