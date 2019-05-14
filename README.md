@@ -76,6 +76,7 @@ VOC           # path:  /home/yang/test/VOC/
      └──VOCdevkit
              └──VOC2007 (来自 VOCtrainval_06-Nov-2007.tar)
                      └──VOC2012 (来自 VOCtrainval_11-May-2012.tar)
+$ python scripts/voc_annotation.py --data_path /home/yang/test/VOC
 ```
 Then edit your `./core/config.py`
 
@@ -95,7 +96,7 @@ As you can see in the tensorboard, if your dataset is too small or you train for
 #### how to test and evaluate it ?
 ```
 $ python evaluate.py
-# cd mAP
+$ cd mAP
 $ python main.py -na
 ```
 if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
