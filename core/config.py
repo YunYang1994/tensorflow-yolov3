@@ -23,7 +23,7 @@ cfg                             = __C
 __C.YOLO                        = edict()
 
 # Set the class name
-__C.YOLO.CLASSES                = "./data/classes/raccon.names"
+__C.YOLO.CLASSES                = "./data/classes/coco.names"
 __C.YOLO.ANCHORS                = "./data/anchors/basline_anchors.txt"
 __C.YOLO.MOVING_AVE_DECAY       = 0.9995
 __C.YOLO.STRIDES                = [8, 16, 32]
