@@ -117,7 +117,6 @@ The paper suggests to use clustering on bounding box shape to find the good anch
 
 ### 4.2 Architercutre details
 In this project, I use the pretrained weights, where we have 80 trained yolo classes (COCO dataset), for recognition. And the class [label](./data/coco.names) is represented as  `c`  and it's integer from 1 to 80, each number represents the class label accordingly. If `c=3`, then the classified object is a  `car`.  The image features learned by the deep convolutional layers are passed onto a classifier and regressor which makes the detection prediction.(coordinates of the bounding boxes, the class label.. etc).details also see in the below picture. (thanks [Levio](https://blog.csdn.net/leviopku/article/details/82660381) for your great image!)
-
 ![image](./docs/images/levio.jpeg)
 
 ### 4.3 Neural network io:
@@ -160,7 +159,7 @@ Non-max suppression uses the very important function called **"Intersection over
 
 ![image](./docs/images/iou.png)
 
-if you want more details, reading the fucking source code and original paper !
+if you want more details, read the fucking source code and original paper or contact with me!
 
 ## part 5. Other Implementations
 
