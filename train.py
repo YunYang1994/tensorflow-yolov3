@@ -49,7 +49,7 @@ class YoloTrain(object):
             self.true_sbboxes = tf.placeholder(dtype=tf.float32, name='sbboxes')
             self.true_mbboxes = tf.placeholder(dtype=tf.float32, name='mbboxes')
             self.true_lbboxes = tf.placeholder(dtype=tf.float32, name='lbboxes')
-            self.trainable     = tf.placeholder(dtype=tf.bool, name='training')
+            self.trainable    = tf.placeholder(dtype=tf.bool, name='training')
 
         with tf.name_scope("define_loss"):
             self.model = YOLOV3(self.input_data, self.trainable)
@@ -78,12 +78,11 @@ class YoloTrain(object):
             moving_ave = tf.train.ExponentialMovingAverage(self.moving_ave_decay).apply(tf.trainable_variables())
 
         with tf.name_scope("define_train_stage"):
-            second_stage_trainable_var_list = tf.trainable_variables()
-            second_stage_optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss,
-                                                      var_list=second_stage_trainable_var_list)
+            trainable_var_list = tf.trainable_variables()
+            optimizer = tf.train.AdamOptimizer(self.learn_rate).minimize(self.loss, var_list=trainable_var_list)
 
             with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-                with tf.control_dependencies([second_stage_optimizer, global_step_update]):
+                with tf.control_dependencies([optimizer, global_step_update]):
                     with tf.control_dependencies([moving_ave]):
                         self.train_op_with_all_variables = tf.no_op()
 
