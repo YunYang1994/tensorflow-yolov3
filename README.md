@@ -88,13 +88,22 @@ __C.YOLO.CLASSES                = "./data/classes/voc.names"
 __C.TRAIN.ANNOT_PATH            = "./data/dataset/voc_train.txt"
 __C.TEST.ANNOT_PATH             = "./data/dataset/voc_test.txt"
 ```
-Finally, you can train it now
+##### train from scratch:
 
 ```bashrc
 $ python train.py
 $ tensorboard --logdir ./data
 ```
-As you can see in the tensorboard, if your dataset is too small or you train for too long, the model starts to overfit and learn patterns from training data that does not generalize to the test data.
+##### train from COCO weights(recommend):
+
+```bashrc
+$ cd checkpoint
+$ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3_coco.tar.gz
+$ tar -xvf yolov3_coco.tar.gz
+$ cd ..
+$ python convert_weight.py --train_from_coco
+$ python train.py
+```
 
 #### how to test and evaluate it ?
 ```
