@@ -88,13 +88,15 @@ __C.YOLO.CLASSES                = "./data/classes/voc.names"
 __C.TRAIN.ANNOT_PATH            = "./data/dataset/voc_train.txt"
 __C.TEST.ANNOT_PATH             = "./data/dataset/voc_test.txt"
 ```
-##### train from scratch:
+Here are two kinds of training method: 
+
+##### (1) train from scratch:
 
 ```bashrc
 $ python train.py
 $ tensorboard --logdir ./data
 ```
-##### train from COCO weights(recommend):
+##### (2) train from COCO weights(recommend):
 
 ```bashrc
 $ cd checkpoint
