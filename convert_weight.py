@@ -34,8 +34,9 @@ with tf.Session() as sess:
         var_name = var.op.name
         var_name_mess = str(var_name).split('/')
         var_shape = var.shape
-        if (var_name_mess[-1] not in ['weights', 'gamma', 'beta', 'moving_mean', 'moving_variance']) or \
-                (var_name_mess[1] == 'yolo-v3' and (var_name_mess[-2] in preserve_org_names)): continue
+        if flag.train_from_coco:
+            if (var_name_mess[-1] not in ['weights', 'gamma', 'beta', 'moving_mean', 'moving_variance']) or \
+                    (var_name_mess[1] == 'yolo-v3' and (var_name_mess[-2] in preserve_org_names)): continue
         org_weights_mess.append([var_name, var_shape])
         print("=> " + str(var_name).ljust(50), var_shape)
 print()
@@ -52,7 +53,8 @@ for var in tf.global_variables():
     var_name_mess = str(var_name).split('/')
     var_shape = var.shape
     print(var_name_mess[0])
-    if var_name_mess[0] in preserve_cur_names: continue
+    if flag.train_from_coco:
+        if var_name_mess[0] in preserve_cur_names: continue
     cur_weights_mess.append([var_name, var_shape])
     print("=> " + str(var_name).ljust(50), var_shape)
 
