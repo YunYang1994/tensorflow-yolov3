@@ -81,7 +81,7 @@ VOC           # path:  /home/yang/test/VOC/
                      
 $ python scripts/voc_annotation.py --data_path /home/yang/test/VOC
 ```
-Then edit your `./core/config.py`
+Then edit your `./core/config.py` to make some necessary configurations
 
 ```bashrc
 __C.YOLO.CLASSES                = "./data/classes/voc.names"
