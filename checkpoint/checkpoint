@@ -1,5 +1,2 @@
-model_checkpoint_path: "yolov3_test_loss=1399.0551.ckpt-4"
-all_model_checkpoint_paths: "yolov3_test_loss=3151.5676.ckpt-1"
-all_model_checkpoint_paths: "yolov3_test_loss=2611.5249.ckpt-2"
-all_model_checkpoint_paths: "yolov3_test_loss=1655.8571.ckpt-3"
-all_model_checkpoint_paths: "yolov3_test_loss=1399.0551.ckpt-4"
+model_checkpoint_path: "yolov3_test_loss=2530.1914.ckpt-1"
+all_model_checkpoint_paths: "yolov3_test_loss=2530.1914.ckpt-1"
