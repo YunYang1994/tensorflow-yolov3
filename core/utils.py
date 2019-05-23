@@ -37,8 +37,8 @@ def get_anchors(anchors_path):
 
 def image_preporcess(image, target_size, gt_boxes=None):
 
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
-
+   # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
+    image = (np.float32(image), cv2.COLOR_BGR2RGB)#.astype(np.float32)
     ih, iw    = target_size
     h,  w, _  = image.shape
 
