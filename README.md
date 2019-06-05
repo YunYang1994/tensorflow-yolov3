@@ -30,7 +30,7 @@ $ cd ..
 $ python convert_weight.py
 $ python freeze_graph.py
 ```
-4. Then you will get some `.pb` files in the dir `./checkpoint`,  and run the demo script
+4. Then you will get some `.pb` files in the root path.,  and run the demo script
 ```bashrc
 $ python image_demo.py
 $ python video_demo.py # if use camera, set video_path = 0
