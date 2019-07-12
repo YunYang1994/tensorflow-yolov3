@@ -1,4 +1,4 @@
-### If you hate the fucking tensorflow1.x ? no worries! I have made a new version in tensorflow2.x, Here is the [link](https://github.com/YunYang1994/TensorFlow2.0-Examples#4---object-detection)
+### If you hate the fucking tensorflow1.x ? no worries! I have made a new version in tensorflow2.x, Here is the link:[TensorFlow2.0-Examples/4-Object_Detection/YOLOV3](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
 
 
 ## part 1. Introduction
