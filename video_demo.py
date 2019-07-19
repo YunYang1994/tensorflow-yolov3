@@ -33,7 +33,6 @@ with tf.Session(graph=graph) as sess:
     while True:
         return_value, frame = vid.read()
         if return_value:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(frame)
         else:
             raise ValueError("No image!")
