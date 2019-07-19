@@ -25,7 +25,6 @@ input_size      = 416
 graph           = tf.Graph()
 
 original_image = cv2.imread(image_path)
-original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 original_image_size = original_image.shape[:2]
 image_data = utils.image_preporcess(np.copy(original_image), [input_size, input_size])
 image_data = image_data[np.newaxis, ...]
