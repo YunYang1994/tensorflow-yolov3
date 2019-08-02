@@ -1,6 +1,6 @@
 # Here is the link of tensorflow2.x-yolov3:[TensorFlow2.0-Examples/4-Object_Detection/YOLOV3](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3) 🔥🔥🔥
 
-# Please install tensorflow-gpu 1.11.0 ! Please install tensorflow-gpu 1.11.0 ! Please install tensorflow-gpu 1.11.0 ! Sine Tensorflow is fucking ridiculous !
+# Please install tensorflow-gpu 1.11.0 !  Sine Tensorflow is fucking ridiculous !
 
 ## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/CodeFun/blob/master/005-paper_reading/YOLOv3.md)
 
