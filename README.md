@@ -112,6 +112,11 @@ $ python train.py
 ```
 
 #### how to test and evaluate it ?
+edit your `./core/config.py` to make some necessary configurations, the weight file path is the one that you want to test from what we generated in the previous step.
+```bashrc
+__C.TEST.WEIGHT_FILE            = "./checkpoint/yolov3_test_loss=9.2099.ckpt-5"
+```
+
 ```
 $ python evaluate.py
 $ cd mAP
