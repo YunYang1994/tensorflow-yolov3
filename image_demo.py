@@ -17,7 +17,7 @@ import core.utils as utils
 import tensorflow as tf
 from PIL import Image
 
-return_elements = ["input/input_data:0", "pred_sbbox/concat_2:0", "pred_mbbox/concat_2:0", "pred_lbbox/concat_2:0"]
+return_elements = ["input/input_data:0", "pred_sbbox/Reshape:0", "pred_mbbox/Reshape:0", "pred_lbbox/Reshape:0"]
 pb_file         = "./yolov3_coco.pb"
 image_path      = "./docs/images/road.jpeg"
 num_classes     = 80
