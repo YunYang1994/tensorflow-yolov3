@@ -40,7 +40,7 @@ $ python image_demo.py
 $ python video_demo.py # if use camera, set video_path = 0
 ```
 ![image](./docs/images/611_result.jpg)
-## part 3. Train on your own dataset
+## part 3. Train your own dataset
 Two files are required as follows:
 
 - [`dataset.txt`](https://raw.githubusercontent.com/YunYang1994/tensorflow-yolov3/master/data/dataset/voc_train.txt): 
