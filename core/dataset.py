@@ -158,7 +158,7 @@ class Dataset(object):
         if not os.path.exists(image_path):
             raise KeyError("%s does not exist ... " %image_path)
         image = np.array(cv2.imread(image_path))
-        bboxes = np.array([list(map(int, box.split(','))) for box in line[1:]])
+        bboxes = np.array([list(map(lambda x: int(float(x)), box.split(','))) for box in line[1:]])
 
         if self.data_aug:
             image, bboxes = self.random_horizontal_flip(np.copy(image), np.copy(bboxes))
