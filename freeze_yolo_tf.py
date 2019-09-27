@@ -17,7 +17,7 @@ import os, shutil
 ckpt_file = "./checkpoint/rdt_model" # Model to freeze
 output_node_names = ["input/input_data", "pred_sbbox/concat_2", "pred_mbbox/concat_2", "pred_lbbox/concat_2"]
 model_export_path = "./models/Flu_audere" # export directory
-version = 1
+version = 2
 export_path = os.path.join(model_export_path, str(version))
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
             main_op=tf.tables_initializer(),
 
-            strip_default_attrs=True)
+            strip_default_attrs=True,clear_devices=True)
 
 
 
