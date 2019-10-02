@@ -4,7 +4,7 @@
 
 ## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/CodeFun/blob/master/002-deep_learning/YOLOv3.md)
 
-Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
+Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments（部分） as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
 - [x] [Training tensorflow-yolov3 with GIOU loss function](https://giou.stanford.edu/)
 - [x] Basic working demo
@@ -12,7 +12,7 @@ Implementation of YOLO v3 object detector in Tensorflow. The full details are in
 - [x] Multi-scale training method
 - [x] Compute VOC mAP
 
-YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
+YOLO paper is quite hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
 
 
 ## part 2. Quick start
