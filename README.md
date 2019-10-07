@@ -4,7 +4,7 @@
 
 ## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/CodeFun/blob/master/computer_vision/YOLOv3.md)
 
-Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
+Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments（部分） as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
 - [x] [Training tensorflow-yolov3 with GIOU loss function](https://giou.stanford.edu/)
 - [x] Basic working demo
@@ -12,7 +12,7 @@ Implementation of YOLO v3 object detector in Tensorflow. The full details are in
 - [x] Multi-scale training method
 - [x] Compute VOC mAP
 
-YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
+YOLO paper is quite hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
 
 
 ## part 2. Quick start
@@ -80,8 +80,8 @@ VOC           # path:  /home/yang/test/VOC/
 |       └──VOC2007 (from VOCtest_06-Nov-2007.tar)
 └── train
      └──VOCdevkit
-             └──VOC2007 (from VOCtrainval_06-Nov-2007.tar)
-                     └──VOC2012 (from VOCtrainval_11-May-2012.tar)
+             ├──VOC2007 (from VOCtrainval_06-Nov-2007.tar)
+             └──VOC2012 (from VOCtrainval_11-May-2012.tar)
                      
 $ python scripts/voc_annotation.py --data_path /home/yang/test/VOC
 ```
@@ -112,6 +112,11 @@ $ python train.py
 ```
 
 #### how to test and evaluate it ?
+edit your `./core/config.py` to make some necessary configurations, the weight file path is the one that you want to test from what we generated in the previous step.
+```bashrc
+__C.TEST.WEIGHT_FILE            = "./checkpoint/yolov3_test_loss=9.2099.ckpt-5"
+```
+
 ```
 $ python evaluate.py
 $ cd mAP
