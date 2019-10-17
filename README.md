@@ -25,7 +25,7 @@ $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
 $ cd tensorflow-yolov3
 $ pip install -r ./docs/requirements.txt
 ```
-3. Exporting loaded COCO weights as TF checkpoint(`yolov3_coco.ckpt`)
+3. Exporting loaded COCO weights as TF checkpoint(`yolov3_coco.ckpt`)【[百度网盘](https://pan.baidu.com/s/1G0neEWl24O8lxirE267E9g&shfl=sharepset)：密码lzi3】
 ```bashrc
 $ cd checkpoint
 $ wget https://github.com/YunYang1994/tensorflow-yolov3/releases/download/v1.0/yolov3_coco.tar.gz
