@@ -133,6 +133,8 @@ $ wget http://images.cocodataset.org/annotations/image_info_test2017.zip
 
 [-**`YOLOv3目标检测有了TensorFlow实现，可用自己的数据来训练`**](https://mp.weixin.qq.com/s/cq7g1-4oFTftLbmKcpi_aQ)<br>
 
+[-**`Stronger-yolo`**](https://github.com/Stinky-Tofu/Stronger-yolo)<br>
+
 [- **`Implementing YOLO v3 in Tensorflow (TF-Slim)`**](https://itnext.io/implementing-yolo-v3-in-tensorflow-tf-slim-c3c55ff59dbe)
 
 [- **`YOLOv3_TensorFlow`**](https://github.com/wizyoung/YOLOv3_TensorFlow)
