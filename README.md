@@ -2,7 +2,7 @@
 
 ## Please install tensorflow-gpu 1.11.0 !  Since Tensorflow is fucking ridiculous !
 
-## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/CodeFun/blob/master/computer_vision/YOLOv3.md)
+## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/Easy-Deep-Learning/blob/master/YOLOv3.md)
 
 Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
