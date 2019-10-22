@@ -20,6 +20,10 @@ def convolutional(input_data, filters_shape, trainable, name, downsample=False, 
         if downsample:
             pad_h, pad_w = (filters_shape[0] - 2) // 2 + 1, (filters_shape[1] - 2) // 2 + 1
             paddings = tf.constant([[0, 0], [pad_h, pad_h], [pad_w, pad_w], [0, 0]])
+            pad_h_total, pad_w_total = filters_shape[0] - 1, filters_shape[1] - 1
+            pad_h_begin, pad_w_begin = (filters_shape[0] - 1) // 2, (filters_shape[1] - 1) // 2
+            pad_h_end, pad_w_end = pad_h_total - pad_h_begin, pad_w_total - pad_w_begin
+            paddings = tf.constant([[0, 0], [pad_h_begin, pad_h_end], [pad_w_begin, pad_w_end], [0, 0]])
             input_data = tf.pad(input_data, paddings, 'CONSTANT')
             strides = (1, 2, 2, 1)
             padding = 'VALID'
