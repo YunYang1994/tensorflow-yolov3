@@ -39,7 +39,11 @@ $ python freeze_graph.py
 $ python image_demo.py
 $ python video_demo.py # if use camera, set video_path = 0
 ```
-![image](./docs/images/611_result.jpg)
+<p align="center">
+    <img width="100%" src="https://user-images.githubusercontent.com/30433053/68088581-9255e700-fe9b-11e9-8672-2672ab398abe.jpg" style="max-width:100%;">
+    </a>
+</p>
+
 ## part 3. Train your own dataset
 Two files are required as follows:
 
