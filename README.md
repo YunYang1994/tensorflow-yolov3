@@ -1,7 +1,16 @@
 # [TensorFlow2.0-Examples/4-Object_Detection/YOLOV3](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
 
-## Please install tensorflow-gpu 1.11.0 !  Since Tensorflow is fucking ridiculous !
-
+<p align="left">
+  <a href="https://github.com/YunYang1994/tensorflow-yolov3/stargazers">
+    <img src="https://img.shields.io/github/stars/YunYang1994/tensorflow-yolov3.svg?label=Stars&style=social"
+        alt="Stars">
+  </a>
+    <a href="https://github.com/YunYang1994/tensorflow-yolov3/network/members">
+    <img src="https://img.shields.io/github/forks/YunYang1994/tensorflow-yolov3.svg?label=Forks&style=social"
+        alt="Forks">
+  </a>
+<br>
+    
 ## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md)
 
 Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
