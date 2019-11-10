@@ -16,13 +16,11 @@
 Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
 - [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
 - [x] [Training tensorflow-yolov3 with GIOU loss function](https://giou.stanford.edu/)
-- [x] Basic working demo
 - [x] Training pipeline
 - [x] Multi-scale training method
 - [x] Compute VOC mAP
 
 YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
-
 
 ## part 2. Quick start
 1. Clone this file
@@ -75,9 +73,7 @@ car
 toothbrush
 ```
 
-### 3.1 Train VOC dataset
-To help you understand my training process, I made this demo of training VOC PASCAL dataset
-#### how to train it ?
+### 3.1 Train on VOC dataset
 Download VOC PASCAL trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
@@ -124,28 +120,22 @@ $ cd ..
 $ python convert_weight.py --train_from_coco
 $ python train.py
 ```
+### 3.2 Evaluate on VOC dataset
 
-#### how to test and evaluate it ?
 ```
 $ python evaluate.py
 $ cd mAP
 $ python main.py -na
 ```
-if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
+
+the mAP on the VOC dataset:
 
 <p align="center">
     <img width="50%" src="https://user-images.githubusercontent.com/33013904/58227054-dd4fc800-7d5b-11e9-85aa-67854292fbe0.png" style="max-width:50%;">
     </a>
 </p>
 
-### 3.2 Train other dataset
-Download COCO trainval  and test data
-```
-$ wget http://images.cocodataset.org/zips/train2017.zip
-$ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-$ wget http://images.cocodataset.org/zips/test2017.zip
-$ wget http://images.cocodataset.org/annotations/image_info_test2017.zip 
-```
+if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
 
 ## part 4. Stargazers over time
 
