@@ -133,6 +133,11 @@ $ python main.py -na
 ```
 if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
 
+<p align="center">
+    <img width="50%" src="https://user-images.githubusercontent.com/33013904/58227054-dd4fc800-7d5b-11e9-85aa-67854292fbe0.png" style="max-width:50%;">
+    </a>
+</p>
+
 ### 3.2 Train other dataset
 Download COCO trainval  and test data
 ```
