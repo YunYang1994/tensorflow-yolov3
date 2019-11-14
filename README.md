@@ -1,8 +1,8 @@
 
 # 🆕 Are you looking for TensorFlow2.x-YOLOv3 ?
 
->YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn. The full details about this repo are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf)<br>
-[blog](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md) | [code](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
+>If you hate the fucking tensorflow1.x very much, no worries! I have implemented an new YOLOv3 repo with TF2.0, and also made a chinese blog on how to implement YOLOv3 object detector from scratch. <br>
+[chinese blog](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md) | [code](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
 
 ## part 1. Quick start
 1. Clone this file
