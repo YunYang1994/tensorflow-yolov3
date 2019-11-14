@@ -110,7 +110,7 @@ $ cd mAP
 $ python main.py -na
 ```
 
-the mAP on the VOC dataset:
+the mAP on the VOC2012 dataset:
 
 <p align="center">
     <img width="50%" src="https://user-images.githubusercontent.com/33013904/58227054-dd4fc800-7d5b-11e9-85aa-67854292fbe0.png" style="max-width:50%;">
