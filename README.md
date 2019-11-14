@@ -1,27 +1,10 @@
-# [TensorFlow2.0-Examples/4-Object_Detection/YOLOV3](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
 
-<p align="left">
-  <a href="https://github.com/YunYang1994/tensorflow-yolov3/stargazers">
-    <img src="https://img.shields.io/github/stars/YunYang1994/tensorflow-yolov3.svg?label=Stars&style=social"
-        alt="Stars">
-  </a>
-    <a href="https://github.com/YunYang1994/tensorflow-yolov3/network/members">
-    <img src="https://img.shields.io/github/forks/YunYang1994/tensorflow-yolov3.svg?label=Forks&style=social"
-        alt="Forks">
-  </a>
-<br>
-    
-## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md)
+# 🆕 Are you looking for TensorFlow2.x-YOLOv3 ?
 
-Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
+>YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn. The full details about this repo are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf)<br>
+[blog](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md) | [code](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
 
-- [x] [Training tensorflow-yolov3 with GIOU loss function](https://giou.stanford.edu/)
-- [x] Multi-scale training method
-- [x] Compute VOC mAP
-
-YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
-
-## part 2. Quick start
+## part 1. Quick start
 1. Clone this file
 ```bashrc
 $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
@@ -50,7 +33,7 @@ $ python video_demo.py # if use camera, set video_path = 0
     </a>
 </p>
 
-## part 3. Train your own dataset
+## part 2. Train your own dataset
 Two files are required as follows:
 
 - [`dataset.txt`](https://raw.githubusercontent.com/YunYang1994/tensorflow-yolov3/master/data/dataset/voc_train.txt): 
@@ -72,7 +55,7 @@ car
 toothbrush
 ```
 
-### 3.1 Train on VOC dataset
+### 2.1 Train on VOC dataset
 Download VOC PASCAL trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
@@ -119,7 +102,7 @@ $ cd ..
 $ python convert_weight.py --train_from_coco
 $ python train.py
 ```
-### 3.2 Evaluate on VOC dataset
+### 2.2 Evaluate on VOC dataset
 
 ```
 $ python evaluate.py
@@ -136,11 +119,11 @@ the mAP on the VOC dataset:
 
 if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
 
-## part 4. Stargazers over time
+## part 3. Stargazers over time
 
 [![Stargazers over time](https://starcharts.herokuapp.com/YunYang1994/tensorflow-yolov3.svg)](https://starcharts.herokuapp.com/YunYang1994/tensorflow-yolov3)
 
-## part 5. Other Implementations
+## part 4. Other Implementations
 
 [-**`YOLOv3目标检测有了TensorFlow实现，可用自己的数据来训练`**](https://mp.weixin.qq.com/s/cq7g1-4oFTftLbmKcpi_aQ)<br>
 
