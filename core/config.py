@@ -13,8 +13,7 @@
 
 from easydict import EasyDict as edict
 import os
-
-
+YOLO_MODEL_VER=2
 __C                             = edict()
 # Consumers can get config by: from config import cfg
 
@@ -24,10 +23,12 @@ cfg                             = __C
 __C.YOLO                        = edict()
 
 # Set the class name
-__C.YOLO.CLASSES                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/classes/rdt_rot.names"
-__C.YOLO.ANCHORS                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/anchors/rdt_anchors_rot.txt"
-# __C.YOLO.CLASSES                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/classes/rdt.names"
-# __C.YOLO.ANCHORS                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/anchors/rdt_anchors.txt"
+if YOLO_MODEL_VER==1:
+    __C.YOLO.CLASSES                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/classes/rdt.names"
+    __C.YOLO.ANCHORS                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/anchors/rdt_anchors.txt"
+elif YOLO_MODEL_VER==2:
+    __C.YOLO.CLASSES                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/classes/rdt_rot.names"
+    __C.YOLO.ANCHORS                = "D:/source/repos/rdt-reader/tensorflow-yolov3/data/anchors/rdt_anchors_rot.txt"
 
 __C.YOLO.MOVING_AVE_DECAY       = 0.9995
 __C.YOLO.STRIDES                = [8, 16, 32]
