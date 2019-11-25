@@ -1,9 +1,9 @@
 import tensorflow as tf
 from core.yolov3 import YOLOV3
 
-iput_size = 412
-darknet_weights = '<your darknet weights' path>'
-ckpt_file = './checkpoint/yolov3.ckpt'
+iput_size = 416
+darknet_weights = '<your yolov3.weights' path>'
+ckpt_file = './checkpoint/yolov3_coco.ckpt'
 
 def load_weights(var_list, weights_file):
     """
