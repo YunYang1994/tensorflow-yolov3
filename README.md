@@ -1,21 +1,10 @@
-# [TensorFlow2.0-Examples/4-Object_Detection/YOLOV3](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3)
 
-## Please install tensorflow-gpu 1.11.0 !  Since Tensorflow is fucking ridiculous !
+## 🆕 Are you looking for a new YOLOv3 implemented by TF2.0 ?
 
-## part 1. Introduction [[代码剖析]](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md)
+>If you hate the fucking tensorflow1.x very much, no worries! I have implemented **a new YOLOv3 repo with TF2.0**, and also made a chinese blog on how to implement YOLOv3 object detector from scratch. <br>
+[code](https://github.com/YunYang1994/TensorFlow2.0-Examples/tree/master/4-Object_Detection/YOLOV3) | [blog](https://github.com/YunYang1994/ai-notebooks/blob/master/YOLOv3.md)  | [issue](https://github.com/YunYang1994/tensorflow-yolov3/issues/39)
 
-Implementation of YOLO v3 object detector in Tensorflow. The full details are in [this paper](https://pjreddie.com/media/files/papers/YOLOv3.pdf).  In this project we cover several segments as follows:<br>
-- [x] [YOLO v3 architecture](https://github.com/YunYang1994/tensorflow-yolov3/blob/master/core/yolov3.py)
-- [x] [Training tensorflow-yolov3 with GIOU loss function](https://giou.stanford.edu/)
-- [x] Basic working demo
-- [x] Training pipeline
-- [x] Multi-scale training method
-- [x] Compute VOC mAP
-
-YOLO paper is quick hard to understand, along side that paper. This repo enables you to have a quick understanding of YOLO Algorithmn.
-
-
-## part 2. Quick start
+## part 1. Quick start
 1. Clone this file
 ```bashrc
 $ git clone https://github.com/YunYang1994/tensorflow-yolov3.git
@@ -39,8 +28,12 @@ $ python freeze_graph.py
 $ python image_demo.py
 $ python video_demo.py # if use camera, set video_path = 0
 ```
-![image](./docs/images/611_result.jpg)
-## part 3. Train your own dataset
+<p align="center">
+    <img width="100%" src="https://user-images.githubusercontent.com/30433053/68088581-9255e700-fe9b-11e9-8672-2672ab398abe.jpg" style="max-width:100%;">
+    </a>
+</p>
+
+## part 2. Train your own dataset
 Two files are required as follows:
 
 - [`dataset.txt`](https://raw.githubusercontent.com/YunYang1994/tensorflow-yolov3/master/data/dataset/voc_train.txt): 
@@ -62,9 +55,7 @@ car
 toothbrush
 ```
 
-### 3.1 Train VOC dataset
-To help you understand my training process, I made this demo of training VOC PASCAL dataset
-#### how to train it ?
+### 2.1 Train on VOC dataset
 Download VOC PASCAL trainval  and test data
 ```bashrc
 $ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
@@ -111,23 +102,25 @@ $ cd ..
 $ python convert_weight.py --train_from_coco
 $ python train.py
 ```
+### 2.2 Evaluate on VOC dataset
 
-#### how to test and evaluate it ?
 ```
 $ python evaluate.py
 $ cd mAP
 $ python main.py -na
 ```
-if you are still unfamiliar with training pipline, you can join [here](https://github.com/YunYang1994/tensorflow-yolov3/issues/39) to discuss with us.
 
-### 3.2 Train other dataset
-Download COCO trainval  and test data
-```
-$ wget http://images.cocodataset.org/zips/train2017.zip
-$ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-$ wget http://images.cocodataset.org/zips/test2017.zip
-$ wget http://images.cocodataset.org/annotations/image_info_test2017.zip 
-```
+the mAP on the VOC2012 dataset:
+
+<p align="center">
+    <img width="50%" src="https://user-images.githubusercontent.com/33013904/58227054-dd4fc800-7d5b-11e9-85aa-67854292fbe0.png" style="max-width:50%;">
+    </a>
+</p>
+
+
+## part 3. Stargazers over time
+
+[![Stargazers over time](https://starcharts.herokuapp.com/YunYang1994/tensorflow-yolov3.svg)](https://starcharts.herokuapp.com/YunYang1994/tensorflow-yolov3)
 
 ## part 4. Other Implementations
 
