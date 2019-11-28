@@ -23,7 +23,12 @@ $ cd ..
 $ python convert_weight.py
 $ python freeze_graph.py
 ```
-4. Then you will get some `.pb` files in the root path.,  and run the demo script
+4. If you want to get darknet-yolov3 [weights](https://pjreddie.com/darknet/yolo/) work in this project,run the following scripts to convert it.
+```bashrc
+$ python from_darknet_weights_to_ckpt.py # If you just want pb files, skip to the next line.
+$ python from_darknet_weights_to_pb.py
+```
+5. Then you will get some `.pb` files in the root path.,  and run the demo script
 ```bashrc
 $ python image_demo.py
 $ python video_demo.py # if use camera, set video_path = 0
