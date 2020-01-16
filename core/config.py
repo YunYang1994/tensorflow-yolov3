@@ -15,7 +15,7 @@ from easydict import EasyDict as edict
 import os
 import settings
 settings.RDT_GIT_ROOT
-YOLO_MODEL_VER=2
+YOLO_MODEL_VER=1
 __C                             = edict()
 # Consumers can get config by: from config import cfg
 
@@ -28,7 +28,7 @@ __C.YOLO                        = edict()
 if YOLO_MODEL_VER==1:
     __C.YOLO.CLASSES                = settings.RDT_GIT_ROOT+"/tensorflow-yolov3/data/classes/rdt.names"
     __C.YOLO.ANCHORS                = settings.RDT_GIT_ROOT+"/tensorflow-yolov3/data/anchors/rdt_anchors.txt"
-elif YOLO_MODEL_VER==2:
+elif YOLO_MODEL_VER>=2:
     __C.YOLO.CLASSES                = settings.RDT_GIT_ROOT+"/tensorflow-yolov3/data/classes/rdt_rot.names"
     __C.YOLO.ANCHORS                = settings.RDT_GIT_ROOT+"/tensorflow-yolov3/data/anchors/rdt_anchors_rot.txt"
 
@@ -68,8 +68,8 @@ __C.TEST.WRITE_IMAGE_PATH       = settings.RDT_GIT_ROOT+"/tensorflow-yolov3/data
 __C.TEST.WRITE_IMAGE_SHOW_LABEL = True
 __C.TEST.WEIGHT_FILE            = settings.RDT_GIT_ROOT+"/tensorflow-yolov3/checkpoint/rdt_model"
 __C.TEST.SHOW_LABEL             = True
-__C.TEST.SCORE_THRESHOLD        = 0.3
-__C.TEST.IOU_THRESHOLD          = 0.3
+__C.TEST.SCORE_THRESHOLD        = 0.1
+__C.TEST.IOU_THRESHOLD          = 0.1
 
 
 

@@ -14,10 +14,10 @@ import os, shutil
 
 
 
-ckpt_file = "D:/source/repos/rdt-reader/Model_KH_EXP/yolov3rot_test_loss=1.1456.ckpt-79" # Model to freeze
+ckpt_file = "C:/Users/Kashyap/bkp/source/repos/rdt-reader/Model_KH_EXP/yolov3rot_test_loss=0.7907.ckpt-438" # Model to freeze
 output_node_names = ["input/input_data", "pred_sbbox/concat_2", "pred_mbbox/concat_2", "pred_lbbox/concat_2"]
-model_export_path = "D:/source/repos/rdt-reader/tensorflow-yolov3-models/models/Flu_audere" # export directory
-version = 2
+model_export_path = "C:/Users/Kashyap/bkp/source/repos/rdt-reader/tensorflow-yolov3-models/models/Flu_audere" # export directory
+version = 3
 export_path = os.path.join(model_export_path, str(version))
 
 
