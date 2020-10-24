@@ -35,7 +35,7 @@ def query_yes_no(question, default="yes", bypass=False):
   while True:
     sys.stdout.write(question + prompt)
     if bypass:
-        break
+        return True # if `force yes confirmation` return True
     if sys.version_info[0] == 3:
       choice = input().lower() # if version 3 of Python
     else:
