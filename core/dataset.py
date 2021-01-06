@@ -166,7 +166,24 @@ class Dataset(object):
             image, bboxes = self.random_translate(np.copy(image), np.copy(bboxes))
 
         image, bboxes = utils.image_preporcess(np.copy(image), [self.train_input_size, self.train_input_size], np.copy(bboxes))
-        return image, bboxes
+        
+        updated_bb = []
+        for bb in bboxes:
+            x1, y1, x2, y2, cls_label = bb
+            
+            if x2 <= x1 or y2 <= y1:
+                # dont use such boxes as this may cause nan loss.
+                continue
+
+            x1 = int(np.clip(x1, 0, image.shape[1]))
+            y1 = int(np.clip(y1, 0, image.shape[0]))
+            x2 = int(np.clip(x2, 0, image.shape[1]))
+            y2 = int(np.clip(y2, 0, image.shape[0]))
+            # clipping coordinates between 0 to image dimensions as negative values 
+            # or values greater than image dimensions may cause nan loss.
+            updated_bb.append([x1, y1, x2, y2, cls_label])
+
+        return image, np.array(updated_bb)
 
     def bbox_iou(self, boxes1, boxes2):
 
@@ -188,7 +205,9 @@ class Dataset(object):
         inter_area = inter_section[..., 0] * inter_section[..., 1]
         union_area = boxes1_area + boxes2_area - inter_area
 
-        return inter_area / union_area
+        return inter_area / (union_area + 1e-6)
+        # added 1e-6 in denominator to avoid generation of inf, which may cause nan loss
+
 
     def preprocess_true_boxes(self, bboxes):
 
@@ -223,6 +242,12 @@ class Dataset(object):
 
                 if np.any(iou_mask):
                     xind, yind = np.floor(bbox_xywh_scaled[i, 0:2]).astype(np.int32)
+                    xind = np.clip(xind, 0, self.train_output_sizes[i] - 1)     
+                    yind = np.clip(yind, 0, self.train_output_sizes[i] - 1)     
+                    # This will mitigate errors generated when the location computed by this is more the grid cell location. 
+                    # e.g. For 52x52 grid cells possible values of xind and yind are in range [0-51] including both. 
+                    # But sometimes the coomputation makes it 52 and then it will try to find that location in label array 
+                    # which is not present and throws error during training.
 
                     label[i][yind, xind, iou_mask, :] = 0
                     label[i][yind, xind, iou_mask, 0:4] = bbox_xywh
@@ -240,6 +265,12 @@ class Dataset(object):
                 best_detect = int(best_anchor_ind / self.anchor_per_scale)
                 best_anchor = int(best_anchor_ind % self.anchor_per_scale)
                 xind, yind = np.floor(bbox_xywh_scaled[best_detect, 0:2]).astype(np.int32)
+                xind = np.clip(xind, 0, self.train_output_sizes[i] - 1)     
+                yind = np.clip(yind, 0, self.train_output_sizes[i] - 1)     
+                # This will mitigate errors generated when the location computed by this is more the grid cell location. 
+                # e.g. For 52x52 grid cells possible values of xind and yind are in range [0-51] including both. 
+                # But sometimes the coomputation makes it 52 and then it will try to find that location in label array 
+                # which is not present and throws error during training.
 
                 label[best_detect][yind, xind, best_anchor, :] = 0
                 label[best_detect][yind, xind, best_anchor, 0:4] = bbox_xywh
