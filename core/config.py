@@ -39,13 +39,14 @@ __C.TRAIN                       = edict()
 __C.TRAIN.ANNOT_PATH            = "./data/dataset/voc_train.txt"
 __C.TRAIN.BATCH_SIZE            = 6
 __C.TRAIN.INPUT_SIZE            = [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
-__C.TRAIN.DATA_AUG              = True
+__C.TRAIN.DATA_AUG              = False
 __C.TRAIN.LEARN_RATE_INIT       = 1e-4
 __C.TRAIN.LEARN_RATE_END        = 1e-6
 __C.TRAIN.WARMUP_EPOCHS         = 2
 __C.TRAIN.FISRT_STAGE_EPOCHS    = 20
 __C.TRAIN.SECOND_STAGE_EPOCHS   = 30
 __C.TRAIN.INITIAL_WEIGHT        = "./checkpoint/yolov3_coco_demo.ckpt"
+__C.TRAIN.CHECKPOINT_PATH       = "./checkpoint/yolov3_test_loss={test_epoch_loss:.4f}.ckpt"
 
 
 
