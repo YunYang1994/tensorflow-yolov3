@@ -114,7 +114,7 @@ class YoloTest(object):
 
                 if self.write_image:
                     image = utils.draw_bbox(image, bboxes_pr, show_label=self.show_label)
-                    cv2.imwrite(self.write_image_path+image_name, image)
+                    cv2.imwrite(self.write_image_path + '/' + image_name, image)
 
                 with open(predict_result_path, 'w') as f:
                     for bbox in bboxes_pr:
