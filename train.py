@@ -116,7 +116,9 @@ class YoloTrain(object):
             tf.summary.scalar("total_loss", self.loss)
 
             logdir = "./data/log/"
-            if os.path.exists(logdir): shutil.rmtree(logdir)
+            if os.path.exists(logdir): 
+                shutil.rmtree(logdir) 
+                time.sleep(2)
             os.mkdir(logdir)
             self.write_op = tf.summary.merge_all()
             self.summary_writer  = tf.summary.FileWriter(logdir, graph=self.sess.graph)
