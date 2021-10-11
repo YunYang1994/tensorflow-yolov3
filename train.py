@@ -34,6 +34,7 @@ class YoloTrain(object):
         self.second_stage_epochs = cfg.TRAIN.SECOND_STAGE_EPOCHS
         self.warmup_periods      = cfg.TRAIN.WARMUP_EPOCHS
         self.initial_weight      = cfg.TRAIN.INITIAL_WEIGHT
+        self.ckpt_file           = cfg.TRAIN.CHECKPOINT_PATH
         self.time                = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
         self.moving_ave_decay    = cfg.YOLO.MOVING_AVE_DECAY
         self.max_bbox_per_scale  = 150
@@ -173,11 +174,10 @@ class YoloTrain(object):
                 test_epoch_loss.append(test_step_loss)
 
             train_epoch_loss, test_epoch_loss = np.mean(train_epoch_loss), np.mean(test_epoch_loss)
-            ckpt_file = "./checkpoint/yolov3_test_loss=%.4f.ckpt" % test_epoch_loss
             log_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
             print("=> Epoch: %2d Time: %s Train loss: %.2f Test loss: %.2f Saving %s ..."
                             %(epoch, log_time, train_epoch_loss, test_epoch_loss, ckpt_file))
-            self.saver.save(self.sess, ckpt_file, global_step=epoch)
+            self.saver.save(self.sess, self.ckpt_file, global_step=epoch)
 
 
 
