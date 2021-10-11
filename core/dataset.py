@@ -119,8 +119,8 @@ class Dataset(object):
 
             crop_xmin = max(0, int(max_bbox[0] - random.uniform(0, max_l_trans)))
             crop_ymin = max(0, int(max_bbox[1] - random.uniform(0, max_u_trans)))
-            crop_xmax = max(w, int(max_bbox[2] + random.uniform(0, max_r_trans)))
-            crop_ymax = max(h, int(max_bbox[3] + random.uniform(0, max_d_trans)))
+            crop_xmax = min(w, int(max_bbox[2] + random.uniform(0, max_r_trans)))
+            crop_ymax = min(h, int(max_bbox[3] + random.uniform(0, max_d_trans)))
 
             image = image[crop_ymin : crop_ymax, crop_xmin : crop_xmax]
 
