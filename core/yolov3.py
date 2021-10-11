@@ -96,8 +96,9 @@ class YOLOV3(object):
 
     def decode(self, conv_output, anchors, stride):
         """
-        return tensor of shape [batch_size, output_size, output_size, anchor_per_scale, 5 + num_classes]
-               contains (x, y, w, h, score, probability)
+        return tensor of shape [batch_size, output_size,
+                                output_size, anchor_per_scale, 5 + num_classes]
+        contains (x, y, w, h, score, probability)
         """
 
         conv_shape       = tf.shape(conv_output)
@@ -105,28 +106,39 @@ class YOLOV3(object):
         output_size      = conv_shape[1]
         anchor_per_scale = len(anchors)
 
-        conv_output = tf.reshape(conv_output, (batch_size, output_size, output_size, anchor_per_scale, 5 + self.num_class))
+        STEP = 5 + self.num_class
+        conv_sigmoid = tf.sigmoid(conv_output)
+        conv_sig_dx = conv_sigmoid[:, :, :, 0::STEP]
+        conv_sig_dy = conv_sigmoid[:, :, :, 1::STEP]
+        conv_raw_dw = conv_output[:, :, :, 2::STEP]
+        conv_raw_dh = conv_output[:, :, :, 3::STEP]
 
-        conv_raw_dxdy = conv_output[:, :, :, :, 0:2]
-        conv_raw_dwdh = conv_output[:, :, :, :, 2:4]
-        conv_raw_conf = conv_output[:, :, :, :, 4:5]
-        conv_raw_prob = conv_output[:, :, :, :, 5: ]
 
-        y = tf.tile(tf.range(output_size, dtype=tf.int32)[:, tf.newaxis], [1, output_size])
-        x = tf.tile(tf.range(output_size, dtype=tf.int32)[tf.newaxis, :], [output_size, 1])
+        x = tf.tile(tf.range(output_size, dtype=tf.int32)[
+            tf.newaxis, tf.newaxis, :, tf.newaxis],
+            [batch_size, output_size, 1, anchor_per_scale])
+        y = tf.tile(tf.range(output_size, dtype=tf.int32)[
+            tf.newaxis, :, tf.newaxis, tf.newaxis],
+            [batch_size, 1, output_size, anchor_per_scale])
 
-        xy_grid = tf.concat([x[:, :, tf.newaxis], y[:, :, tf.newaxis]], axis=-1)
-        xy_grid = tf.tile(xy_grid[tf.newaxis, :, :, tf.newaxis, :], [batch_size, 1, 1, anchor_per_scale, 1])
-        xy_grid = tf.cast(xy_grid, tf.float32)
+        x = tf.cast(x, tf.float32)
+        y = tf.cast(y, tf.float32)
 
-        pred_xy = (tf.sigmoid(conv_raw_dxdy) + xy_grid) * stride
-        pred_wh = (tf.exp(conv_raw_dwdh) * anchors) * stride
-        pred_xywh = tf.concat([pred_xy, pred_wh], axis=-1)
+        pred_x = (conv_sig_dx + x) * stride
+        pred_y = (conv_sig_dy + y) * stride
+        pred_w = tf.exp(conv_raw_dw) * anchors[:, 0] * stride
+        pred_h = tf.exp(conv_raw_dh) * anchors[:, 1] * stride
 
-        pred_conf = tf.sigmoid(conv_raw_conf)
-        pred_prob = tf.sigmoid(conv_raw_prob)
 
-        return tf.concat([pred_xywh, pred_conf, pred_prob], axis=-1)
+        result = tf.concat([
+            tf.concat([
+                pred_x[:, :, :, i:i+1], pred_y[:, :, :, i:i+1],
+                pred_w[:, :, :, i:i+1], pred_h[:, :, :, i:i+1],
+                conv_sigmoid[:, :, :, 4 + STEP * i: STEP * (i + 1)]], axis=-1)
+            for i in range(anchor_per_scale)], axis=-1)
+
+        return tf.reshape(result,
+            (batch_size, output_size, output_size, anchor_per_scale, STEP))
 
     def focal(self, target, actual, alpha=1, gamma=2):
         focal_loss = alpha * tf.pow(tf.abs(target - actual), gamma)
