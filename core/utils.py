@@ -43,7 +43,7 @@ def image_preporcess(image, target_size, gt_boxes=None):
     h,  w, _  = image.shape
 
     scale = min(iw/w, ih/h)
-    nw, nh  = int(scale * w), int(scale * h)
+    nw, nh  = int(float(scale) * w), int(float(scale) * h)
     image_resized = cv2.resize(image, (nw, nh))
 
     image_paded = np.full(shape=[ih, iw, 3], fill_value=128.0)
@@ -181,7 +181,7 @@ def postprocess_boxes(pred_bbox, org_img_shape, input_size, score_threshold):
                                 pred_xywh[:, :2] + pred_xywh[:, 2:] * 0.5], axis=-1)
     # # (2) (xmin, ymin, xmax, ymax) -> (xmin_org, ymin_org, xmax_org, ymax_org)
     org_h, org_w = org_img_shape
-    resize_ratio = min(input_size / org_w, input_size / org_h)
+    resize_ratio = min(float(input_size) / org_w, float(input_size) / org_h)
 
     dw = (input_size - resize_ratio * org_w) / 2
     dh = (input_size - resize_ratio * org_h) / 2
