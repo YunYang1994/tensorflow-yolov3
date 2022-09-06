@@ -218,7 +218,8 @@ class Dataset(object):
 
         for bbox in bboxes:
             bbox_coor = bbox[:4]
-            bbox_class_ind = bbox[4]
+            bbox_class_ind = bbox[4].astype(np.int)
+            # To get rid of IndexError when bboxes array is of float type.
 
             onehot = np.zeros(self.num_classes, dtype=np.float)
             onehot[bbox_class_ind] = 1.0
